@@ -69,7 +69,9 @@ def _run_test_get_cuda_device(
     with tempfile.NamedTemporaryFile() as lock_tmp, \
             tempfile.NamedTemporaryFile() as allocation_tmp, \
             mock.patch("ml_hadoop_experiment.common.spark_inference.os.getpid") as getpid_mock, \
-            mock.patch("ml_hadoop_experiment.common.spark_inference._get_all_pids") as all_pids_mock, \
+            mock.patch(
+                "ml_hadoop_experiment.common.spark_inference._get_all_pids"
+            ) as all_pids_mock, \
             _file_locking_mock():
         with open(allocation_tmp.name, "w+") as fd:
             fd.write(json.dumps(existing_allocs))

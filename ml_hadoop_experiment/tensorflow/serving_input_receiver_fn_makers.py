@@ -51,15 +51,21 @@ def featurespec_to_input_placeholders(
             indices_key = k + "/indices"
             values_key = k + "/values"
 
-            shape_placeholder = tf.compat.v1.placeholder(tf.int64,
-                                               shape=[2],
-                                               name=make_placeholder_name(shape_key))
-            indices_placeholder = tf.compat.v1.placeholder(tf.int64,
-                                                 shape=[None, 2],
-                                                 name=make_placeholder_name(indices_key))
-            values_placeholder = tf.compat.v1.placeholder(v.dtype,
-                                                shape=[None],
-                                                name=make_placeholder_name(values_key))
+            shape_placeholder = tf.compat.v1.placeholder(
+                tf.int64,
+                shape=[2],
+                name=make_placeholder_name(shape_key)
+            )
+            indices_placeholder = tf.compat.v1.placeholder(
+                tf.int64,
+                shape=[None, 2],
+                name=make_placeholder_name(indices_key)
+            )
+            values_placeholder = tf.compat.v1.placeholder(
+                v.dtype,
+                shape=[None],
+                name=make_placeholder_name(values_key)
+            )
 
             raw_tensors[shape_key] = shape_placeholder
             raw_tensors[indices_key] = indices_placeholder

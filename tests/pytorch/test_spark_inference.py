@@ -102,7 +102,9 @@ def test_with_inference_column_and_preprocessing(local_spark_session, on_gpu):
     model: Union[torch.nn.Module, SerializableObj] = load_reducer()
     with mock.patch("ml_hadoop_experiment.pytorch.spark_inference.torch.cuda.is_available") \
         as cuda_available_mock, \
-            mock.patch("ml_hadoop_experiment.pytorch.spark_inference.get_cuda_device") as get_cuda_device_mock:
+            mock.patch(
+                "ml_hadoop_experiment.pytorch.spark_inference.get_cuda_device"
+            ) as get_cuda_device_mock:
         cuda_available_mock.return_value = on_gpu
         get_cuda_device_mock.return_value = 0
         df_result = with_inference_column_and_preprocessing(
@@ -201,7 +203,9 @@ def run_with_inference_column(local_spark_session, serialize_model: bool, on_gpu
         if serialize_model else load_reducer()
     with mock.patch("ml_hadoop_experiment.pytorch.spark_inference.torch.cuda.is_available") \
         as cuda_available_mock, \
-            mock.patch("ml_hadoop_experiment.pytorch.spark_inference.get_cuda_device") as get_cuda_device_mock:
+            mock.patch(
+                "ml_hadoop_experiment.pytorch.spark_inference.get_cuda_device"
+            ) as get_cuda_device_mock:
         cuda_available_mock.return_value = on_gpu
         get_cuda_device_mock.return_value = 0
         df_result = with_inference_column(

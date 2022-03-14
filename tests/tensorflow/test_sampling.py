@@ -37,7 +37,9 @@ def test_sampling(
         # so the sampling algo will directly refer to column "sampling_hash" in the DataFrame
         return "sampling_hash", df
 
-    with mock.patch('ml_hadoop_experiment.tensorflow.sampling.add_deterministic_sampling_col') as mock_sampling_col:
+    with mock.patch(
+        'ml_hadoop_experiment.tensorflow.sampling.add_deterministic_sampling_col'
+    ) as mock_sampling_col:
         mock_sampling_col.side_effect = add_deterministic_sampling_col_mock
 
         ldf = pd.DataFrame.from_records([
@@ -68,7 +70,9 @@ def test_sampling_weight_column(local_spark_session):
         # so the sampling algo will directly refer to column "sampling_hash" in the DataFrame
         return "sampling_hash", df
 
-    with mock.patch('ml_hadoop_experiment.tensorflow.sampling.add_deterministic_sampling_col') as mock_sampling_col:
+    with mock.patch(
+        'ml_hadoop_experiment.tensorflow.sampling.add_deterministic_sampling_col'
+    ) as mock_sampling_col:
         mock_sampling_col.side_effect = add_deterministic_sampling_col_mock
 
         ldf = pd.DataFrame.from_records([

@@ -2,8 +2,10 @@ import pytest
 import tensorflow as tf
 import pyspark
 
-from ml_hadoop_experiment.tensorflow.dataframe_to_tf_helper import is_datatype_compatible_with_feature_spec
-from ml_hadoop_experiment.tensorflow.dataframe_to_tf_helper import is_structfield_compatible_with_feature_spec
+from ml_hadoop_experiment.tensorflow.dataframe_to_tf_helper import (
+    is_datatype_compatible_with_feature_spec,
+    is_structfield_compatible_with_feature_spec
+)
 
 
 @pytest.mark.parametrize("column_type,feature_spec,expected_result", [

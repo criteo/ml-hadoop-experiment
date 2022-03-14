@@ -95,7 +95,9 @@ def test_keras_inference_multi_head(local_spark_session):
 def test_graph_inference_mono_head(local_spark_session):
     df = local_spark_session.createDataFrame([[3, 113], [33, 333]], ["partnerid", "contextid"])
     graph_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dummy_graph.pb")
-    with graph_model(local_spark_session, graph_path, ["partnerid", "contextid"], ["add/add"]) as model:
+    with graph_model(
+        local_spark_session, graph_path, ["partnerid", "contextid"], ["add/add"]
+    ) as model:
         pdf = with_graph_inference_column(
             df, model, extract_fn=lambda x: pd.Series(x["add/add"][:, 0])
         ).toPandas()

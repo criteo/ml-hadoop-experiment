@@ -14,7 +14,7 @@ user = getpass.getuser()
 
 
 @pytest.mark.parametrize("feature_mappings,specs", [
-    (data.feature_mappings, data.features_specs)  
+    (data.feature_mappings, data.features_specs)
 ])
 def test_to_tf_proto(feature_mappings, specs, tmpdir):
     tf_proto = tffr.to_tf_proto(data.mappings_sample(feature_mappings), specs)
