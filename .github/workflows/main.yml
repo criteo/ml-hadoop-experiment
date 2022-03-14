@@ -17,6 +17,7 @@ jobs:
         with:
           distribution: 'zulu' # See 'Supported distributions' for available options
           java-version: '11'
+        run: java --version
       - name: Set up Python 3.6
         uses: actions/setup-python@v2
         with:
@@ -33,5 +34,9 @@ jobs:
         run: |
           mypy . --ignore-missing-imports
       - name: Tests
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu' # See 'Supported distributions' for available options
+          java-version: '11'
         run: |
           pytest -s tests
