@@ -3,3 +3,5 @@ tensorflow==2.4.1
 keras==2.4.3
 pytest
 mock
+pylama
+mypy==0.790
