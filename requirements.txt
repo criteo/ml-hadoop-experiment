@@ -1,0 +1,7 @@
+pyspark==2.4.4
+psutil
+pandas
+numpy
+cluster_pack
+tqdm
+deprecation

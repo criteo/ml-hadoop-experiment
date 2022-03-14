@@ -1,0 +1,5 @@
+torch
+tf_yarn[cpu]
+keras==2.4.3
+pytest
+mock
