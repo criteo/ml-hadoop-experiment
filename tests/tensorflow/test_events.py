@@ -6,7 +6,7 @@ import pandas
 from ml_hadoop_experiment.tensorflow import events
 
 
-MODULE_TO_TEST = "thx.tfpipeline.events"
+MODULE_TO_TEST = "ml_hadoop_experiment.tensorflow.events"
 
 
 class Value(typing.NamedTuple):
