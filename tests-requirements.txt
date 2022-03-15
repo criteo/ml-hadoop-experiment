@@ -5,3 +5,4 @@ pytest
 mock
 pylama
 mypy==0.790
+sklearn
