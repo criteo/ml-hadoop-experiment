@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pyspark.sql as sp
 from pyspark.sql.types import FloatType
+from pyspark.sql import functions as sf
 
 
 def with_inference_column(df: sp.DataFrame,
@@ -52,6 +53,6 @@ def with_inference_column(df: sp.DataFrame,
 
         return result
 
-    udf = sp.functions.pandas_udf(inference, FloatType())(*columns)
+    udf = sf.pandas_udf(inference, FloatType())(*columns)
 
     return df.withColumn(column_name, udf)
