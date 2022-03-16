@@ -1,8 +1,21 @@
 import pytest
 import numpy as np
 import pandas as pd
+from sklearn.linear_model import LogisticRegression
 
 from ml_hadoop_experiment.sklearn.spark_inference import with_inference_column
+
+@pytest.fixture()
+def sklearn_lr_model():
+    """Returns a simple trained LR model, with test data and expected predictions
+    """
+    df_train = pd.DataFrame([{'a': 1.5, 'b': 2.5}, {'a': .5, 'b': 4.5}])
+    targets = pd.Series([True, False])
+
+    lr = LogisticRegression()
+    lr.fit(df_train, targets)
+
+    return lr
 
 
 def test_with_inference_column_pos(local_spark_session, sklearn_lr_model):
@@ -16,7 +29,7 @@ def test_with_inference_column_pos(local_spark_session, sklearn_lr_model):
 
     pred_df = with_inference_column(local_spark_session.createDataFrame(df_test),
                                     sklearn_lr_model,
-                                    extract_pos).toPandas()
+                                    postprocessing_fn=extract_pos).toPandas()
 
     for pred, exp in zip(pred_df.prediction.values, expected_pos):
         assert pred == pytest.approx(exp)
@@ -34,8 +47,8 @@ def test_with_inference_column_neg(local_spark_session, sklearn_lr_model):
     col = "my_column"
     pred_df = with_inference_column(local_spark_session.createDataFrame(df_test),
                                     sklearn_lr_model,
-                                    extract_neg,
-                                    col).toPandas()
+                                    col,
+                                    postprocessing_fn=extract_neg).toPandas()
 
     for pred, exp in zip(pred_df[col].values, expected_neg):
         assert pred == pytest.approx(exp)
