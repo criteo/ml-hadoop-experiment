@@ -48,7 +48,7 @@ def test_keras_inference_mono_head(local_spark_session):
         df = ss.createDataFrame([[3, 113], [33, 333]], ["feature1", "feature2"])
         with keras_model(ss, tmp) as model:
             pdf = with_inference(
-                df, model, ["feature1", "feature2"], inference_fn, FloatType()
+                df, model, inference_fn, ["feature1", "feature2"], FloatType()
             ).toPandas()
             assert pdf["prediction"].equals(
                 (pdf["feature1"] + pdf["feature2"]).astype('float32'))
@@ -85,7 +85,7 @@ def test_keras_inference_multi_head(local_spark_session):
         df = ss.createDataFrame([[3, 113], [33, 333]], ["feature1", "feature2"])
         with keras_model(ss, tmp) as model:
             pdf = with_inference(
-                df, model, ["feature1", "feature2"], inference_fn, ArrayType(FloatType())
+                df, model, inference_fn, ["feature1", "feature2"], ArrayType(FloatType())
             ).toPandas()
             for row in pdf.itertuples():
                 assert (row.feature1 + row.feature2) == row.prediction[0]
@@ -99,7 +99,7 @@ def test_graph_inference_mono_head(local_spark_session):
         local_spark_session, graph_path, ["partnerid", "contextid"], ["add/add"]
     ) as model:
         pdf = with_graph_inference_column(
-            df, model, extract_fn=lambda x: pd.Series(x["add/add"][:, 0])
+            df, model, postprocessing_fn=lambda x: pd.Series(x["add/add"][:, 0])
         ).toPandas()
         assert pdf["prediction"].equals((pdf["partnerid"] + pdf["contextid"]).astype('float32'))
 
@@ -113,7 +113,7 @@ def test_with_inference_computed_once(local_spark_session):
     ss = local_spark_session
     df = ss.createDataFrame([(2., 12.), (8., 18.)], ["feature1", "feature2"])
     df_result = with_inference(
-        df, {"value": 0}, ["feature1", "feature2"], inference_fn, ArrayType(FloatType()),
+        df, {"value": 0}, inference_fn, ["feature1", "feature2"], ArrayType(FloatType()),
         batch_size=100
     )
     df_result = df_result \
