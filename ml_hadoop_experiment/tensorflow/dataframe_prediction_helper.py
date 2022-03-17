@@ -36,6 +36,7 @@ _default_signature = tf.compat.v1.saved_model.signature_constants.DEFAULT_SERVIN
 # Output: inference columnn
 inference_udf = Callable[[artifact_type, Tuple[pd.Series, ...]], pd.Series]
 
+
 def _canned_linear_classifier_extract_prediction_fn(
     fetch_tensors: Dict[str, List]
 ) -> List[float]:
@@ -124,7 +125,7 @@ def with_graph_inference_column(
     :param output_column_name: name of the newly-created inference column
     :param output_column_type: type of the newly-created inference column
     postprocessing_fn: postprocessing function called on your model outputs
-    The primary purpose of this functon is to extract the relevant scores/predictions of 
+    The primary purpose of this functon is to extract the relevant scores/predictions of
     your model outputs but it is not limited to this use case.
     :return: a new dataframe with a new column 'output_column_name'
     """
@@ -179,7 +180,7 @@ def with_inference_column(
     :param output_column_name: name of the newly-created inference column
     :param feed_tensor_key: feed tensor key to use to feed your model with inputs
     postprocessing_fn: postprocessing function called on your model outputs
-    The primary purpose of this functon is to extract the relevant scores/predictions of 
+    The primary purpose of this functon is to extract the relevant scores/predictions of
     your model outputs but it is not limited to this use case.
     :return: a new dataframe with a new column 'output_column_name'
     """
@@ -263,7 +264,7 @@ def predict_with_tfr(
     features_specs: specifications of your model input features
     model_path: path to your model
     postprocessing_fn: postprocessing function called on your model outputs
-    The primary purpose of this functon is to extract the relevant scores/predictions of 
+    The primary purpose of this functon is to extract the relevant scores/predictions of
     your model outputs but it is not limited to this use case.
     feed_tensor_key: feed tensor key to feed your model with inputs
     '''

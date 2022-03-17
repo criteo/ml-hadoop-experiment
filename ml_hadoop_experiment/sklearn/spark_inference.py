@@ -18,7 +18,7 @@ def with_inference_column(
     Runs inference on the input dataframe and adds a column 'output_column_name' with
     your postprocessed model outputs.
     Your model/sklearn.Pipeline must have a method predict_proba
-    
+
     Example usage:
         def predict_proba_extract(model_outputs):
             return pd.Series(model_outputs[:, 1])
@@ -31,7 +31,7 @@ def with_inference_column(
     :param output_column_name: name of the newly-created inference column
     :param output_column_type: type of the newly-created inference column
     :param postprocessing_fn: postprocessing function called on your model outputs
-    The primary purpose of this functon is to extract the relevant scores/predictions of 
+    The primary purpose of this functon is to extract the relevant scores/predictions of
     your model outputs but it is not limited to this use case.
     """
     if df is None or not isinstance(df, sp.DataFrame):
