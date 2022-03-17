@@ -6,3 +6,4 @@ mock
 pylama
 mypy==0.790
 sklearn
+pyspark==2.4.4
