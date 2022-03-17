@@ -5,6 +5,7 @@ from sklearn.linear_model import LogisticRegression
 
 from ml_hadoop_experiment.sklearn.spark_inference import with_inference_column
 
+
 @pytest.fixture()
 def sklearn_lr_model():
     """Returns a simple trained LR model, with test data and expected predictions
