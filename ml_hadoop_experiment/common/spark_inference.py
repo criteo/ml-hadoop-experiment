@@ -186,6 +186,10 @@ def from_broadcasted(
         return _from_broadcasted(broadcasted_obj)
 
 
+def log(logger: logging.Logger, msg: str, level: int = logging.INFO) -> None:
+    logger.log(level, f"[{os.getpid()}] {msg}")
+
+
 def _broadcast(sc: pyspark.context.SparkContext, artifact: Any) -> pyspark.broadcast.Broadcast:
     if isinstance(artifact, SerializableObj):
         return artifact.broadcast

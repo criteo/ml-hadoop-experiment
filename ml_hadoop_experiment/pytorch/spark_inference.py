@@ -1,4 +1,3 @@
-import os
 from typing import List, Callable, Tuple, Any
 import logging
 import uuid
@@ -11,7 +10,7 @@ from pyspark.sql import functions as sf
 from pyspark.sql.types import DataType
 
 from ml_hadoop_experiment.common.spark_inference import (
-    broadcast, artifact_type, from_broadcasted, split_in_batches, get_cuda_device
+    broadcast, artifact_type, from_broadcasted, split_in_batches, get_cuda_device, log
 )
 
 _logger = logging.getLogger(__file__)
@@ -174,7 +173,7 @@ def _with_retry(func: Callable[[], Any], max_retry: int) -> None:
         try:
             return func()
         except RuntimeError as e:
-            _log(f"Caught exception {e}")
+            log(_logger, f"Caught exception {e}")
             if n_try > 3:
                 raise e
 
@@ -223,7 +222,7 @@ def _with_inference_column(
                     torch.cuda.device_count(), lock_file, allocation_file
                 )
                 device = f"cuda:{cuda_device}"
-            _log(f"Running inference on {device}")
+            log(_logger, f"Running inference on {device}")
             return inference_fn(artifacts, features, device)
 
     broadcasted_artifacts = broadcast(df._sc, artifacts)
@@ -237,7 +236,3 @@ def _with_inference_column(
     # (https://issues.apache.org/jira/browse/SPARK-17728).
     # One workaround is to wrap the pandas udf in sf.explode(sf.array())
     return df.withColumn(output_col, sf.explode(sf.array(_inference_udf(*input_cols))))
-
-
-def _log(msg: str, level: int = logging.INFO) -> None:
-    _logger.log(level, f"[{os.getpid()}] {msg}")

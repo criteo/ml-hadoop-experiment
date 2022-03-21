@@ -6,6 +6,8 @@ from typing import (
     Tuple,
     Any
 )
+from uuid import uuid4
+import logging
 
 import tensorflow as tf
 import numpy as np
@@ -18,7 +20,10 @@ from pyspark.sql.column import Column
 from ml_hadoop_experiment.tensorflow import tfrecords
 from ml_hadoop_experiment.tensorflow.predictor import Predictor, feeds_type, fetches_type
 from ml_hadoop_experiment.common.spark_inference import SerializableObj, \
-    broadcast, from_broadcasted, artifact_type, split_in_batches
+    broadcast, from_broadcasted, artifact_type, split_in_batches, get_cuda_device, log
+
+
+_logger = logging.getLogger(__file__)
 
 features_specs_type = Dict[
         str,
@@ -238,10 +243,31 @@ def with_inference(
             tf.config.threading.set_intra_op_parallelism_threads(num_threads)
 
         artifacts = from_broadcasted(broadcasted_artifacts)
-        results = pd.Series()
-        for batch in split_in_batches(rows, batch_size):
-            results = results.append(inference_fn(artifacts, batch))
-        return results
+
+        def _run_inference():
+            results = pd.Series()
+            for batch in split_in_batches(rows, batch_size):
+                results = results.append(inference_fn(artifacts, batch))
+            return results
+
+        tf.debugging.set_log_device_placement(True)
+        gpu_devices = [
+            d for d in tf.config.experimental.list_physical_devices() if "XLA_GPU" in d
+        ]
+        n_gpu_devices = len(gpu_devices)
+        if n_gpu_devices > 0:
+            file_id = str(uuid4())
+            lock_file = f"/tmp/lockfile_{file_id}"
+            allocation_file = f"/tmp/allocation_cuda_{file_id}"
+            cuda_device = get_cuda_device(
+                n_gpu_devices, lock_file, allocation_file
+            )
+            log(_logger, f"Running inference on GPU {cuda_device}")
+            with tf.device(f"/device:GPU:{cuda_device}"):
+                return _run_inference()
+        else:
+            log(_logger, f"Running inference on CPU")
+            return _run_inference()
 
     inference_udf = sf.pandas_udf(_inference_fn, returnType=output_column_type)
     # In some situation, the pandas udf can be computed more than once when the

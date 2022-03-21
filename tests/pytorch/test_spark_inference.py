@@ -66,7 +66,7 @@ def test_with_retry():
     def func() -> None:
         raise RuntimeError("Error")
 
-    with mock.patch("ml_hadoop_experiment.pytorch.spark_inference._log") as logger_mock:
+    with mock.patch("ml_hadoop_experiment.pytorch.spark_inference.log") as logger_mock:
         n_retry = 3
         try:
             spark_inference._with_retry(func, n_retry)
