@@ -266,7 +266,7 @@ def with_inference(
             with tf.device(f"/device:GPU:{cuda_device}"):
                 return _run_inference()
         else:
-            log(_logger, f"Running inference on CPU")
+            log(_logger, "Running inference on CPU")
             return _run_inference()
 
     inference_udf = sf.pandas_udf(_inference_fn, returnType=output_column_type)
