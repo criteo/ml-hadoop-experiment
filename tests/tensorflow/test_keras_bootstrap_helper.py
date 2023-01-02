@@ -72,8 +72,8 @@ def test_build_eval_only_model(model_build_fn, df):
     eval_only = eval_only_model.evaluate(predictions, label_format_fn(df))
 
     # losses and metrics: total loss, loss_add, loss_multiply, RMSE_add, RMSE_multiply
-    assert(results == [20.0, 4.0, 16.0, 2.0, 4.0])
-    assert(eval_only == [20.0, 4.0, 16.0, 2.0, 4.0])
+    assert results == [20.0, 4.0, 16.0, 2.0, 4.0]
+    assert eval_only == [20.0, 4.0, 16.0, 2.0, 4.0]
 
 
 @pytest.mark.parametrize("model_build_fn", [keras_model_fn, legacy_keras_model_fn])
