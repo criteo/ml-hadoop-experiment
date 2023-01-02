@@ -33,13 +33,19 @@ tensor_inference_udf = Callable[[artifact_type, Tuple[torch.Tensor, ...], str], 
 
 
 class PandasSeriesDataset(torch.utils.data.Dataset):
-    def __init__(self, features: Tuple[pd.Series, ...], preprocess_fn: preprocessing_fn):
+    def __init__(
+        self,
+        features: Tuple[pd.Series, ...],
+        preprocess_fn: Callable[[Tuple[Any, ...]], Tuple[torch.Tensor, ...]]
+    ):
         self.features = features
         self.n_features = len(features)
         self.preprocess_fn = preprocess_fn
 
     def __getitem__(self, index: int) -> Tuple[Any, ...]:
-        return self.preprocess_fn(tuple(self.features[i].iloc[index] for i in range(self.n_features)))
+        return self.preprocess_fn(
+            tuple(self.features[i].iloc[index] for i in range(self.n_features))
+        )
 
     def __len__(self) -> int:
         return len(self.features[0])
