@@ -4,6 +4,7 @@ keras==2.4.3
 pytest
 mock
 pylama
+pyflakes==2.4.0
 mypy==0.790
-sklearn
+scikit-learn
 pyspark==2.4.4
