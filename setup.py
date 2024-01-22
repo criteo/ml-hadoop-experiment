@@ -24,7 +24,7 @@ CLASSIFIERS = [
    "License :: OSI Approved :: Apache Software License",
    "Operating System :: OS Independent",
    "Programming Language :: Python :: 3",
-   "Programming Language :: Python :: 3.6",
+   "Programming Language :: Python :: 3.9",
    "Intended Audience :: Developers"
 ]
 
@@ -33,10 +33,10 @@ setuptools.setup(
     name="ml_hadoop_experiment",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    version="0.0.3",
+    version="0.0.6",
     install_requires=REQUIREMENTS,
     tests_require=_read_reqs("tests-requirements.txt"),
-    python_requires=">=3.6",
+    python_requires=">=3.9",
     maintainer="Criteo",
     maintainer_email="github@criteo.com",
     description=DESCRIPTION,
