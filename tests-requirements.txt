@@ -1,5 +1,5 @@
 torch
-tensorflow==2.4.1
+tensorflow==2.5.0
 keras==2.4.3
 pytest
 mock
