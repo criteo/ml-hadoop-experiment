@@ -17,7 +17,7 @@ _logger = logging.getLogger(__file__)
 artifact_type = Any
 
 # Function to load all artifacts to use for inference
-load_fn_type = Callable[[Any], artifact_type]
+load_fn_type = Callable[..., artifact_type]
 
 CUDA_DEVICE_ENV = "CUDA_DEVICE"
 
