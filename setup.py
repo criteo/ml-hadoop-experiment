@@ -34,7 +34,7 @@ setuptools.setup(
     name="ml_hadoop_experiment",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    version="0.0.4",
+    version="0.0.5",
     install_requires=REQUIREMENTS,
     tests_require=_read_reqs("tests-requirements.txt"),
     python_requires=">=3.6",
