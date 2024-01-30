@@ -1,4 +1,5 @@
 import os
+
 import setuptools
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -24,6 +25,7 @@ CLASSIFIERS = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.9",
     "Intended Audience :: Developers",
 ]
 
@@ -32,7 +34,7 @@ setuptools.setup(
     name="ml_hadoop_experiment",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    version="0.0.3",
+    version="0.0.4",
     install_requires=REQUIREMENTS,
     tests_require=_read_reqs("tests-requirements.txt"),
     python_requires=">=3.6",
