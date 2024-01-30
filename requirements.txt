@@ -1,5 +1,5 @@
 psutil
-pandas
+pandas<2
 numpy
 cluster_pack
 tqdm

@@ -1,27 +1,18 @@
-import os
 import logging
+import os
 from collections.abc import Sized
-from typing import (
-    Dict,
-    Union,
-    Iterator,
-    List,
-    Tuple,
-    Callable,
-    Iterable,
-    Optional,
-    cast,
-    Generator
-)
+from typing import (Callable, Dict, Generator, Iterable, Iterator, List,
+                    Optional, Tuple, Union, cast)
 
 import deprecation
-import tensorflow as tf
-from pyspark.sql.functions import rand
 import pyspark
+import tensorflow as tf
 from cluster_pack import filesystem
+from pyspark.sql.functions import rand
 
-from ml_hadoop_experiment.tensorflow import vocabulary, dataframe_prediction_helper
 from ml_hadoop_experiment.common.paths import check_full_hdfs_path
+from ml_hadoop_experiment.tensorflow import (dataframe_prediction_helper,
+                                             vocabulary)
 
 _logger = logging.getLogger(__name__)
 
@@ -30,56 +21,41 @@ TF_RECORD_DIR = "tf_records"
 COL_CARDINALITIES_DIR = "col_cardinalities"
 
 
-features_specs_type = Dict[
-    str,
-    Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]
-]
+features_specs_type = Dict[str, Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]]
 
 
-transfo_fn_type = Callable[
-    [Dict[str, tf.Tensor]],
-    Dict[str, tf.Tensor]
-]
+transfo_fn_type = Callable[[Dict[str, tf.Tensor]], Dict[str, tf.Tensor]]
 
 
-@deprecation.deprecated(deprecated_in="0.2.0",
-                        details="Use serving_input_receiver_fn_makers\
-                        .make_default_serving_input_receiver_fn instead")
+@deprecation.deprecated(
+    deprecated_in="0.2.0",
+    details="Use serving_input_receiver_fn_makers\
+                        .make_default_serving_input_receiver_fn instead",
+)
 def serving_input_receiver_fn_factory(
     features_specs: features_specs_type,
-    feature_transfo_fn: transfo_fn_type = None,
-    input_name: str = 'inputs'
+    feature_transfo_fn: Optional[transfo_fn_type] = None,
+    input_name: str = 'inputs',
 ) -> Callable[[], tf.estimator.export.ServingInputReceiver]:
-    def serving_input_receiver_fn(
-    ) -> tf.estimator.export.ServingInputReceiver:
-        serialized_tfr_example = tf.compat.v1.placeholder(
-            dtype=tf.string,
-            shape=[None],
-            name=input_name
-        )
-        parsed_features = tf.io.parse_example(
-            serialized=serialized_tfr_example, features=features_specs
-        )
+    def serving_input_receiver_fn() -> tf.estimator.export.ServingInputReceiver:
+        serialized_tfr_example = tf.compat.v1.placeholder(dtype=tf.string, shape=[None], name=input_name)
+        parsed_features = tf.io.parse_example(serialized=serialized_tfr_example, features=features_specs)
         if feature_transfo_fn:
-            parsed_features = feature_transfo_fn(parsed_features)
+            parsed_features = feature_transfo_fn(parsed_features)  # type: ignore
         return tf.estimator.export.ServingInputReceiver(
             parsed_features,
             # Passing a dict is required to override the default single value: `input`
-            {input_name: serialized_tfr_example}
+            {input_name: serialized_tfr_example},
         )
 
     return serving_input_receiver_fn
 
 
 def read_parsed_tfr(
-    files: Iterable[str],
-    features_specs: features_specs_type,
-    compression_type: str = "GZIP"
+    files: Iterable[str], features_specs: features_specs_type, compression_type: str = "GZIP"
 ) -> Iterator[Dict]:
-    dataset = tf.data.TFRecordDataset(files, compression_type=compression_type)
-    dataset = dataset.map(
-        lambda x: tf.io.parse_single_example(serialized=x, features=features_specs)
-    )
+    dataset = tf.data.TFRecordDataset(files, compression_type=compression_type)  # type: ignore
+    dataset = dataset.map(lambda x: tf.io.parse_single_example(serialized=x, features=features_specs))  # type: ignore
     return run_with_one_shot_iterator(dataset)
 
 
@@ -87,14 +63,13 @@ def read_parsed_sequence_tfr(
     files: Iterable[str],
     context_features: features_specs_type,
     sequence_features: features_specs_type,
-    compression_type: str = "GZIP"
+    compression_type: str = "GZIP",
 ) -> Iterator[Dict]:
-    dataset = tf.data.TFRecordDataset(files, compression_type=compression_type)
-    dataset = dataset.map(
+    dataset = tf.data.TFRecordDataset(files, compression_type=compression_type)  # type: ignore
+    dataset = dataset.map(  # type: ignore
         lambda x: tf.io.parse_single_sequence_example(
-            x,
-            context_features=context_features,
-            sequence_features=sequence_features)
+            x, context_features=context_features, sequence_features=sequence_features
+        )
     )
     return run_with_one_shot_iterator(dataset)
 
@@ -133,55 +108,53 @@ def _as_list(value: features_type) -> Optional[List[features_primitive]]:
 
 
 def _int64_feature(value: List[int]) -> tf.train.Feature:
-    return tf.train.Feature(int64_list=tf.train.Int64List(
-        value=value
-    ))
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
 
 
 def _float_feature(value: List[float]) -> tf.train.Feature:
-    return tf.train.Feature(float_list=tf.train.FloatList(
-        value=value
-    ))
+    return tf.train.Feature(float_list=tf.train.FloatList(value=value))
 
 
 def _string_feature(value: List[Union[str, bytes]]) -> tf.train.Feature:
-    return tf.train.Feature(bytes_list=tf.train.BytesList(
-        value=[x.encode() if isinstance(x, str) else x for x in value]))
+    return tf.train.Feature(
+        bytes_list=tf.train.BytesList(value=[x.encode() if isinstance(x, str) else x for x in value])
+    )
 
 
-def _get_feature_default_value(
-    spec: tf.io.FixedLenFeature
-) -> List[features_primitive]:
+def _get_feature_default_value(spec: tf.io.FixedLenFeature) -> List[features_primitive]:
     value: features_primitive
-    if spec.dtype.is_integer:
+    if spec.dtype.is_integer:  # type: ignore
         value = 0
-    elif spec.dtype.is_floating:
+    elif spec.dtype.is_floating:  # type: ignore
         value = 0.0
     elif spec.dtype == tf.string:
         value = b''
     else:
         raise ValueError(f'No default value for type {spec.dtype}')
-    return [value] * spec.shape[0]
+    return [value] * spec.shape[0]  # type: ignore
 
 
 def _preprocess_feature_value(
-    value: features_type,
-    spec: Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]
-) -> Optional[Union[List[Union[int, float, str, bytes]]]]:
+    value: features_type, spec: Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]
+) -> Optional[List[Union[int, float, str, bytes]]]:
     try:
         # tf.io.FixedLenFeature has attribute default_value, tf.io.VarLenFeature hasn't
         # we can not check FixedLenFeature with isinstance due to pickling issues
         if hasattr(spec, 'default_value'):
             # Interpret an empty list as None
-            if isinstance(value, Sized) and not isinstance(value, str) and\
-                    not isinstance(value, bytes) and len(value) == 0:
+            if (
+                isinstance(value, Sized)
+                and not isinstance(value, str)
+                and not isinstance(value, bytes)
+                and len(value) == 0
+            ):
                 value = None
 
             if value is None:
-                if spec.default_value is not None:
+                if spec.default_value is not None:  # type: ignore
                     value = None
                 else:
-                    value = _get_feature_default_value(spec)
+                    value = _get_feature_default_value(spec)  # type: ignore
 
         return _as_list(value)
     except TypeError as ex:
@@ -189,15 +162,14 @@ def _preprocess_feature_value(
 
 
 def _value_to_feature(
-    value: List[features_primitive],
-    spec: Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]
+    value: List[features_primitive], spec: Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]
 ) -> tf.train.Feature:
-    if spec.dtype.is_integer:
+    if spec.dtype.is_integer:  # type: ignore
         for val in value:
             if not isinstance(val, int):
                 raise ValueError(f"{str(val)} in {value} is not integer as required by {spec}")
         return _int64_feature(cast(List[int], value))
-    elif spec.dtype.is_floating:
+    elif spec.dtype.is_floating:  # type: ignore
         for val in value:
             if not isinstance(val, int) and not isinstance(val, float):
                 raise ValueError(f"{str(val)} in {value} is not a number as required by {spec}")
@@ -212,10 +184,9 @@ def _value_to_feature(
 
 
 def to_tf_proto(
-    x: Dict[str, features_type],
-    features_specs: Dict[str, Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]]
+    x: Dict[str, features_type], features_specs: Dict[str, Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]]
 ) -> tf.train.Example:
-    """ Transform values into tensorflow Examples for TFRecords
+    """Transform values into tensorflow Examples for TFRecords
     If default values are included in the feature spec then we keep null entries for the
     Tfrecord, assuming the same spec will be used to read the TFrecords. If no default value
     is included then we add one, otherwise the incomplete feature spec will create a failure
@@ -229,9 +200,8 @@ def to_tf_proto(
         if value is None:
             continue
 
-        if hasattr(spec, 'shape') and len(value) != spec.shape[0]:
-            raise ValueError(
-                f"value {value} does not correspond to expected shape in spec {spec}")
+        if hasattr(spec, 'shape') and len(value) != spec.shape[0]:  # type: ignore
+            raise ValueError(f"value {value} does not correspond to expected shape in spec {spec}")
         feature[name] = _value_to_feature(value, spec)
 
     features = tf.train.Features(feature=feature)
@@ -242,14 +212,12 @@ def write_example_partition(
     tfrecords: Iterable[tf.train.Example],
     index: int,
     export_path: str,
-    compression_type: tf.compat.v1.io.TFRecordCompressionType =
-    tf.compat.v1.io.TFRecordCompressionType.GZIP
+    compression_type: tf.compat.v1.io.TFRecordCompressionType = tf.compat.v1.io.TFRecordCompressionType.GZIP,
 ) -> List[Tuple[str, int]]:
     remote_path = "{0}/part-{1:05d}".format(export_path, index)
     options = tf.io.TFRecordOptions(compression_type=compression_type)
     num_tfr_records = 0
-    with tf.io.TFRecordWriter(remote_path, options=options) \
-            as writer:
+    with tf.io.TFRecordWriter(remote_path, options=options) as writer:
         for tfr in tfrecords:
             writer.write(tfr.SerializeToString())
             num_tfr_records += 1
@@ -259,23 +227,22 @@ def write_example_partition(
 def write_example_rdd(
     tfrecords: pyspark.RDD,
     export_path: str,
-    compression_type: tf.compat.v1.io.TFRecordCompressionType =
-    tf.compat.v1.io.TFRecordCompressionType.GZIP
+    compression_type: tf.compat.v1.io.TFRecordCompressionType = tf.compat.v1.io.TFRecordCompressionType.GZIP,
 ) -> List[Tuple[str, int]]:
-    """ Save a list of TF records on HDFS"""
+    """Save a list of TF records on HDFS"""
     if not check_full_hdfs_path(export_path):
         raise ValueError(f"{export_path} is not a full hdfs path")
     return tfrecords.mapPartitionsWithIndex(
-        lambda idx, tfrecords:
-            write_example_partition(tfrecords, idx, export_path, compression_type)).collect()
+        lambda idx, tfrecords: write_example_partition(tfrecords, idx, export_path, compression_type)
+    ).collect()
 
 
 def df_to_tf_record(
     df: pyspark.sql.DataFrame,
     features_specs: features_specs_type,
     base_dir: str,
-    vocab_columns: List[str] = None,
-    threshold: int = 0
+    vocab_columns: Optional[List[str]] = None,
+    threshold: int = 0,
 ) -> List[str]:
     tf_record_dir = f"{base_dir}/{TF_RECORD_DIR}"
 
@@ -283,22 +250,18 @@ def df_to_tf_record(
         col_cardinalities_dir = f"{base_dir}/{COL_CARDINALITIES_DIR}"
         _logger.info("writing vocab files ..")
         vocab_files = vocabulary.gen_vocab_files_from_list(
-            vocab_columns,
-            df.select(vocab_columns).rdd,
-            col_cardinalities_dir,
-            threshold=threshold
+            vocab_columns, df.select(vocab_columns).rdd, col_cardinalities_dir, threshold=threshold
         )
         _logger.info(f"vocab files: {vocab_files}")
 
-    _df = df.select(dataframe_prediction_helper.filtered_columns(df, features_specs)).\
-        orderBy(rand()).\
-        persist(pyspark.StorageLevel.DISK_ONLY)
+    _df = (
+        df.select(dataframe_prediction_helper.filtered_columns(df, features_specs))
+        .orderBy(rand())
+        .persist(pyspark.StorageLevel.DISK_ONLY)
+    )
 
     _logger.info("writing tf_record files ..")
-    _df.write.\
-        format("tfrecords").\
-        option("codec", "org.apache.hadoop.io.compress.GzipCodec").\
-        save(tf_record_dir)
+    _df.write.format("tfrecords").option("codec", "org.apache.hadoop.io.compress.GzipCodec").save(tf_record_dir)
 
     fs, _ = filesystem.resolve_filesystem_and_path(tf_record_dir)
     files = [f for f in fs.ls(tf_record_dir) if not os.path.basename(f).startswith("_")]

@@ -1,9 +1,9 @@
-from typing import Callable, Dict, List, Union, Optional, Any
+from typing import Any, Callable, Dict, List, Optional, Union
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+from tensorflow.keras import Input, Model, layers
 from tqdm import tqdm
-from tensorflow.keras import Input, layers, Model
 
 try:
     import keras as legacy_keras
@@ -11,8 +11,7 @@ except ImportError:
     pass
 
 
-def build_eval_only_model(model: Union[Model, legacy_keras.Model],
-                          metrics: List[Any] = None) -> Model:
+def build_eval_only_model(model: Union[Model, legacy_keras.Model], metrics: Optional[List[Any]] = None) -> Model:
     """builds a model for evaluation only.
 
     Arguments:
@@ -38,14 +37,16 @@ def build_eval_only_model(model: Union[Model, legacy_keras.Model],
     return eval_model
 
 
-def evaluate_bootstrap(model: Union[Model, legacy_keras.Model],
-                       df: pd.DataFrame,
-                       nb_bootstrap: int,
-                       input_transform: Callable[[pd.DataFrame], List[np.ndarray]],
-                       label_transform: Callable[[pd.DataFrame], List[np.ndarray]],
-                       metrics: List[Any] = None,
-                       weight_transform: Callable[[pd.DataFrame], List[np.ndarray]] = None,
-                       seed: Optional[int] = None) -> Dict[str, List[float]]:
+def evaluate_bootstrap(
+    model: Union[Model, legacy_keras.Model],
+    df: pd.DataFrame,
+    nb_bootstrap: int,
+    input_transform: Callable[[pd.DataFrame], List[np.ndarray]],
+    label_transform: Callable[[pd.DataFrame], List[np.ndarray]],
+    metrics: Optional[List[Any]] = None,
+    weight_transform: Optional[Callable[[pd.DataFrame], List[np.ndarray]]] = None,
+    seed: Optional[int] = None,
+) -> Dict[str, List[float]]:
     """Boostrap the evaluation of loss and metrics from a model
 
     Arguments:
@@ -85,16 +86,15 @@ def evaluate_bootstrap(model: Union[Model, legacy_keras.Model],
         if weight_columns is None:
             sample_weights = {name: bootstrap_weights for name in eval_only.output_names}
         else:
-            sample_weights = {name: bootstrap_weights * column
-                              for name, column in zip(eval_only.output_names, weight_columns)}
+            sample_weights = {
+                name: bootstrap_weights * column for name, column in zip(eval_only.output_names, weight_columns)
+            }
 
-        results.append(eval_only.evaluate(predictions,
-                                          labels,
-                                          sample_weight=sample_weights,
-                                          verbose=0))
-    metrics_names = eval_only.metrics_names if weight_transform is not None \
-        else map(lambda s: s.replace('weighted_', ''), eval_only.metrics_names) \
-        # this is needed for tensoflow 1.15 which adds a 'weighted_' to the metrics name
+        results.append(eval_only.evaluate(predictions, labels, sample_weight=sample_weights, verbose=0))
+    metrics_names = (
+        eval_only.metrics_names
+        if weight_transform is not None
+        else map(lambda s: s.replace('weighted_', ''), eval_only.metrics_names)
+    )  # this is needed for tensoflow 1.15 which adds a 'weighted_' to the metrics name
 
-    return {metric: values for (metric, values) in zip(metrics_names,
-                                                       np.array(results).T.tolist())}
+    return {metric: values for (metric, values) in zip(metrics_names, np.array(results).T.tolist())}

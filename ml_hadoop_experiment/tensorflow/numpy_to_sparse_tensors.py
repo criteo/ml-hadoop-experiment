@@ -1,25 +1,16 @@
-from typing import (
-    Dict,
-    Union,
-    Tuple,
-    Any
-)
+from typing import Any, Dict, Tuple, Union
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
-
-features_specs_type = Dict[
-    str,
-    Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]
-]
+features_specs_type = Dict[str, Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]]
 
 
 # generates lists starting from 0 to k-1 for each item "k" in the list
 # https://stackoverflow.com/questions/53422006/how-to-do-this-operation-in-numpy-chaining-of
 # -tiling-operation/
 # eg [2,3] --> [0,1,0,1,2]
-def _generate_increments(sizes: Any) -> np.array:
+def _generate_increments(sizes: Any) -> np.ndarray:
     if len(sizes) == 0:
         return np.array([], np.int64)
 
@@ -30,7 +21,7 @@ def _generate_increments(sizes: Any) -> np.array:
         if idx < 0:
             return np.zeros(0, np.int64)
 
-    steps = sizes[:idx + 1]
+    steps = sizes[: idx + 1]
     cumulative_steps = steps.cumsum()
 
     reset_range = np.zeros(cumulative_steps[-1], np.int64)
@@ -40,8 +31,7 @@ def _generate_increments(sizes: Any) -> np.array:
 
 # Generate a sparse tensor by stacking variable-length features.
 # This happens when each feature is an array
-def create_sparse_np_stacked(features: Any, dtype: Any) -> \
-        Tuple[np.array, np.array, np.array]:
+def create_sparse_np_stacked(features: Any, dtype: Any) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     feature_lengths = np.array([len(f) for f in features])
     max_feature_length = np.max(feature_lengths)
 

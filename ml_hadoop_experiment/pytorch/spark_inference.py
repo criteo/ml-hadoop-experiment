@@ -1,17 +1,19 @@
-from typing import List, Callable, Tuple, Any
 import logging
 import uuid
+from typing import Any, Callable, List, Tuple
 
-import torch
-from torch.utils.data import DataLoader
 import pandas as pd
 import pyspark
+import torch
 from pyspark.sql import functions as sf
 from pyspark.sql.types import DataType
+from torch.utils.data import DataLoader
 
-from ml_hadoop_experiment.common.spark_inference import (
-    broadcast, artifact_type, from_broadcasted, split_in_batches, get_cuda_device, log
-)
+from ml_hadoop_experiment.common.spark_inference import (artifact_type,
+                                                         broadcast,
+                                                         from_broadcasted,
+                                                         get_cuda_device, log,
+                                                         split_in_batches)
 
 _logger = logging.getLogger(__file__)
 
@@ -34,18 +36,14 @@ tensor_inference_udf = Callable[[artifact_type, Tuple[torch.Tensor, ...], str], 
 
 class PandasSeriesDataset(torch.utils.data.Dataset):
     def __init__(
-        self,
-        features: Tuple[pd.Series, ...],
-        preprocess_fn: Callable[[Tuple[Any, ...]], Tuple[torch.Tensor, ...]]
+        self, features: Tuple[pd.Series, ...], preprocess_fn: Callable[[Tuple[Any, ...]], Tuple[torch.Tensor, ...]]
     ):
         self.features = features
         self.n_features = len(features)
         self.preprocess_fn = preprocess_fn
 
     def __getitem__(self, index: int) -> Tuple[Any, ...]:
-        return self.preprocess_fn(
-            tuple(self.features[i].iloc[index] for i in range(self.n_features))
-        )
+        return self.preprocess_fn(tuple(self.features[i].iloc[index] for i in range(self.n_features)))
 
     def __len__(self) -> int:
         return len(self.features[0])
@@ -63,7 +61,7 @@ def with_inference_column_and_preprocessing(
     num_threads: int = 8,
     num_workers_preprocessing: int = 8,
     dataloader_timeout_secs: int = 60,
-    dataloader_max_retry: int = 3
+    dataloader_max_retry: int = 3,
 ) -> pyspark.sql.dataframe.DataFrame:
     """
     :param df: dataframe that holds the input
@@ -92,13 +90,14 @@ def with_inference_column_and_preprocessing(
     input data
     """
     _inference_fn = _tensor_inference_udf_wrapper(
-        preprocessing, inference_fn, batch_size, num_workers_preprocessing,
-        dataloader_timeout_secs, dataloader_max_retry
+        preprocessing,
+        inference_fn,
+        batch_size,
+        num_workers_preprocessing,
+        dataloader_timeout_secs,
+        dataloader_max_retry,
     )
-    return _with_inference_column(
-        df, artifacts, input_cols, _inference_fn, output_type, output_col,
-        num_threads
-    )
+    return _with_inference_column(df, artifacts, input_cols, _inference_fn, output_type, output_col, num_threads)
 
 
 def with_inference_column(
@@ -127,10 +126,7 @@ def with_inference_column(
     :param num_threads: Number of threads to run PyTorch inter/inta-ops
     """
     _inference_fn = _pandas_inference_udf_wrapper(inference_fn, batch_size)
-    return _with_inference_column(
-        df, artifacts, input_cols, _inference_fn, output_type, output_col,
-        num_threads
-    )
+    return _with_inference_column(df, artifacts, input_cols, _inference_fn, output_type, output_col, num_threads)
 
 
 def _tensor_inference_udf_wrapper(
@@ -139,7 +135,7 @@ def _tensor_inference_udf_wrapper(
     batch_size: int,
     num_workers_preprocessing: int,
     dataloader_timeout_secs: int,
-    dataloader_max_retry: int
+    dataloader_max_retry: int,
 ) -> pandas_inference_udf:
 
     def _wrapper(
@@ -159,7 +155,7 @@ def _tensor_inference_udf_wrapper(
                 shuffle=False,
                 num_workers=num_workers_preprocessing,
                 prefetch_factor=2,
-                timeout=dataloader_timeout_secs
+                timeout=dataloader_timeout_secs,
             )
             all_results: List[Any] = list()
             for batch in dataloader:
@@ -172,7 +168,7 @@ def _tensor_inference_udf_wrapper(
     return _wrapper
 
 
-def _with_retry(func: Callable[[], Any], max_retry: int) -> None:
+def _with_retry(func: Callable[[], Any], max_retry: int):
     n_try = 1
     while n_try <= max_retry:
         n_try += 1
@@ -184,10 +180,7 @@ def _with_retry(func: Callable[[], Any], max_retry: int) -> None:
                 raise e
 
 
-def _pandas_inference_udf_wrapper(
-    inference_fn: pandas_inference_udf,
-    batch_size: int
-) -> pandas_inference_udf:
+def _pandas_inference_udf_wrapper(inference_fn: pandas_inference_udf, batch_size: int) -> pandas_inference_udf:
 
     def _wrapper(
         artifacts: artifact_type,
@@ -199,6 +192,7 @@ def _pandas_inference_udf_wrapper(
             result = inference_fn(artifacts, batch, device)
             results = results.append(result)
         return results
+
     return _wrapper
 
 
@@ -209,7 +203,7 @@ def _with_inference_column(
     inference_fn: pandas_inference_udf,
     output_type: DataType,
     output_col: str = "prediction",
-    num_threads: int = 8
+    num_threads: int = 8,
 ) -> pyspark.sql.dataframe.DataFrame:
 
     def _inference_fn(*features: pd.Series) -> pd.Series:
@@ -224,9 +218,7 @@ def _with_inference_column(
         with torch.no_grad():
             device = "cpu"
             if torch.cuda.is_available():
-                cuda_device = get_cuda_device(
-                    torch.cuda.device_count(), lock_file, allocation_file
-                )
+                cuda_device = get_cuda_device(torch.cuda.device_count(), lock_file, allocation_file)
                 device = f"cuda:{cuda_device}"
             log(_logger, f"Running inference on {device}")
             return inference_fn(artifacts, features, device)
@@ -236,7 +228,7 @@ def _with_inference_column(
     lock_file = f"/tmp/lockfile_{file_id}"
     allocation_file = f"/tmp/allocation_cuda_{file_id}"
 
-    _inference_udf = sf.pandas_udf(_inference_fn, returnType=output_type)
+    _inference_udf = sf.pandas_udf(_inference_fn, returnType=output_type)  # type: ignore
     # In some situation, the pandas udf can be computed more than once when the
     # output column is referenced more than once,
     # (https://issues.apache.org/jira/browse/SPARK-17728).
