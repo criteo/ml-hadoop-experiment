@@ -91,9 +91,7 @@ def test_evaluate_bootstrap(model_build_fn, df):
     boot2 = df.iloc[np.random.randint(n, size=n)]
     results_2 = keras_model.evaluate(input_format_fn(boot2), label_format_fn(boot2))
 
-    results = evaluate_bootstrap(
-        keras_model, df, 2, input_format_fn, label_format_fn, ["RootMeanSquaredError"], seed=0
-    )
+    results = evaluate_bootstrap(keras_model, df, 2, input_format_fn, label_format_fn, ["RootMeanSquaredError"], seed=0)
     for idx, (name, values) in enumerate(results.items()):
         assert np.isclose(values[0], results_1[idx], rtol=1e-09, atol=1e-06)
         assert np.isclose(values[1], results_2[idx], rtol=1e-09, atol=1e-06)

@@ -48,9 +48,7 @@ def test_keras_inference_mono_head(local_spark_session):
         ss = local_spark_session
         df = ss.createDataFrame([[3, 113], [33, 333]], ["feature1", "feature2"])
         with keras_model(ss, tmp) as model:
-            pdf = with_inference(
-                df, model, inference_fn, ["feature1", "feature2"], FloatType()
-            ).toPandas()
+            pdf = with_inference(df, model, inference_fn, ["feature1", "feature2"], FloatType()).toPandas()
             assert pdf["prediction"].equals((pdf["feature1"] + pdf["feature2"]).astype("float32"))
 
 
@@ -71,9 +69,7 @@ def test_keras_inference_multi_head(local_spark_session):
     ]
     add_layer = Add()(inputs)
     mul_layer = Multiply()(inputs)
-    dummy_model = keras.Model(
-        inputs=inputs, outputs={"score_add": add_layer, "score_mul": mul_layer}
-    )
+    dummy_model = keras.Model(inputs=inputs, outputs={"score_add": add_layer, "score_mul": mul_layer})
 
     # inference
     with tempfile.TemporaryDirectory() as tmp:
@@ -81,9 +77,7 @@ def test_keras_inference_multi_head(local_spark_session):
         ss = local_spark_session
         df = ss.createDataFrame([[3, 113], [33, 333]], ["feature1", "feature2"])
         with keras_model(ss, tmp) as model:
-            pdf = with_inference(
-                df, model, inference_fn, ["feature1", "feature2"], ArrayType(FloatType())
-            ).toPandas()
+            pdf = with_inference(df, model, inference_fn, ["feature1", "feature2"], ArrayType(FloatType())).toPandas()
             for row in pdf.itertuples():
                 assert (row.feature1 + row.feature2) == row.prediction[0]
                 assert (row.feature1 * row.feature2) == row.prediction[1]
@@ -92,9 +86,7 @@ def test_keras_inference_multi_head(local_spark_session):
 def test_graph_inference_mono_head(local_spark_session):
     df = local_spark_session.createDataFrame([[3, 113], [33, 333]], ["partnerid", "contextid"])
     graph_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dummy_graph.pb")
-    with graph_model(
-        local_spark_session, graph_path, ["partnerid", "contextid"], ["add/add"]
-    ) as model:
+    with graph_model(local_spark_session, graph_path, ["partnerid", "contextid"], ["add/add"]) as model:
         pdf = with_graph_inference_column(
             df, model, postprocessing_fn=lambda x: pd.Series(x["add/add"][:, 0])
         ).toPandas()

@@ -24,9 +24,7 @@ def add_deterministic_sampling_col(
 
 
 # simplify filters if they are trivial
-def get_filter_sampling_ratio(
-    column: pyspark.sql.column.Column, sampling_ratio: float
-) -> pyspark.sql.column.Column:
+def get_filter_sampling_ratio(column: pyspark.sql.column.Column, sampling_ratio: float) -> pyspark.sql.column.Column:
     if sampling_ratio <= 0.0:
         return sf.lit(False)
     elif sampling_ratio >= 1.0:
@@ -92,9 +90,9 @@ def sample_with_predicate(
 
     df = df.withColumn(
         WEIGHT_COLUMN_NAME,
-        pyspark.sql.functions.when(
-            positive_predicate, weight_col * max_sampling / global_pos_sampling
-        ).otherwise(weight_col * max_sampling / global_neg_sampling),
+        pyspark.sql.functions.when(positive_predicate, weight_col * max_sampling / global_pos_sampling).otherwise(
+            weight_col * max_sampling / global_neg_sampling
+        ),
     )
 
     return df

@@ -61,6 +61,4 @@ def test_with_inference_column_params(local_spark_session, sklearn_lr_model):
     with pytest.raises(ValueError):
         with_inference_column("not a df", sklearn_lr_model)
     with pytest.raises(ValueError):
-        with_inference_column(
-            local_spark_session.createDataFrame(pd.DataFrame({"a": 1})), "not a model"
-        )
+        with_inference_column(local_spark_session.createDataFrame(pd.DataFrame({"a": 1})), "not a model")

@@ -11,9 +11,7 @@ except ImportError:
     pass
 
 
-def build_eval_only_model(
-    model: Union[Model, legacy_keras.Model], metrics: Optional[List[Any]] = None
-) -> Model:
+def build_eval_only_model(model: Union[Model, legacy_keras.Model], metrics: Optional[List[Any]] = None) -> Model:
     """builds a model for evaluation only.
 
     Arguments:
@@ -89,13 +87,10 @@ def evaluate_bootstrap(
             sample_weights = {name: bootstrap_weights for name in eval_only.output_names}
         else:
             sample_weights = {
-                name: bootstrap_weights * column
-                for name, column in zip(eval_only.output_names, weight_columns)
+                name: bootstrap_weights * column for name, column in zip(eval_only.output_names, weight_columns)
             }
 
-        results.append(
-            eval_only.evaluate(predictions, labels, sample_weight=sample_weights, verbose=0)
-        )
+        results.append(eval_only.evaluate(predictions, labels, sample_weight=sample_weights, verbose=0))
     metrics_names = (
         eval_only.metrics_names
         if weight_transform is not None

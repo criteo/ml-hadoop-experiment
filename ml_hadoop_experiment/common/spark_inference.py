@@ -42,9 +42,7 @@ class _SerializableObjWrapper(object):
 
 
 class SerializableObj(object):
-    def __init__(
-        self, sparkSession: pyspark.sql.SparkSession, load_fn: load_fn_type, *load_fn_args: Any
-    ):
+    def __init__(self, sparkSession: pyspark.sql.SparkSession, load_fn: load_fn_type, *load_fn_args: Any):
         self.ew = _SerializableObjWrapper(load_fn, *load_fn_args)
         self.broadcast = sparkSession.sparkContext.broadcast(self.ew)
 
@@ -84,9 +82,7 @@ def _allocate_cuda_device(
     if cuda_device:
         return cuda_device, new_allocation_map
 
-    new_sorted_allocation_map = dict(
-        sorted(new_allocation_map.items(), key=lambda item: len(item[1]))
-    )
+    new_sorted_allocation_map = dict(sorted(new_allocation_map.items(), key=lambda item: len(item[1])))
     cuda, pids = list(new_sorted_allocation_map.items())[0]
     pids.add(pid)
     return cuda, new_sorted_allocation_map
@@ -104,9 +100,7 @@ def _get_cuda_device(n_gpus: int, pid: int, allocation_file: str) -> int:
         with open(allocation_file, "r+") as fp:
             allocation_map = json.loads(fp.read())
             allocation_map = {int(cuda): set(pids) for cuda, pids in allocation_map.items()}
-            cuda_device, _new_allocation_map = _allocate_cuda_device(
-                n_gpus, allocation_map, _get_all_pids(), pid
-            )
+            cuda_device, _new_allocation_map = _allocate_cuda_device(n_gpus, allocation_map, _get_all_pids(), pid)
             fp.seek(0)
             fp.write(json.dumps({cuda: list(pids) for cuda, pids in _new_allocation_map.items()}))
             fp.truncate()
@@ -171,9 +165,7 @@ def broadcast(
         return _broadcast(sc, artifact)
 
 
-def from_broadcasted(
-    broadcasted_obj: Union[List[pyspark.broadcast.Broadcast], pyspark.broadcast.Broadcast]
-) -> Any:
+def from_broadcasted(broadcasted_obj: Union[List[pyspark.broadcast.Broadcast], pyspark.broadcast.Broadcast]) -> Any:
     if isinstance(broadcasted_obj, List):
         return [_from_broadcasted(obj) for obj in broadcasted_obj]
     else:

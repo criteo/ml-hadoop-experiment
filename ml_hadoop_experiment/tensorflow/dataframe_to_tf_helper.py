@@ -59,21 +59,15 @@ def exact_data_type_for_varlen_feature_spec(
     return pyspark.sql.types.ArrayType(df_type, False)
 
 
-def exact_structfield_for_feature_spec(
-    name: str, feature_spec: features_spec_type
-) -> pyspark.sql.types.StructField:
+def exact_structfield_for_feature_spec(name: str, feature_spec: features_spec_type) -> pyspark.sql.types.StructField:
     datatype = exact_data_type_for_feature_spec(feature_spec)
     is_nullable = feature_spec.default_value is not None  # type: ignore
     return pyspark.sql.types.StructField(name, datatype, is_nullable)
 
 
 @singledispatch
-def is_datatype_compatible_with_feature_spec(
-    feature_spec: Any, datatype: pyspark.sql.types.DataType
-) -> bool:
-    raise NotImplementedError(
-        f"Unsupported type for feature_spec {feature_spec} : " f"{type(feature_spec)}"
-    )
+def is_datatype_compatible_with_feature_spec(feature_spec: Any, datatype: pyspark.sql.types.DataType) -> bool:
+    raise NotImplementedError(f"Unsupported type for feature_spec {feature_spec} : " f"{type(feature_spec)}")
 
 
 @is_datatype_compatible_with_feature_spec.register(tf.io.FixedLenFeature)
@@ -91,9 +85,7 @@ def is_datatype_compatible_with_fixed_feature_spec(
         if can_convert_x_to_y(datatype_tmp, feature_spec.dtype):  # type: ignore
             return True
         else:
-            _logger.info(
-                f"No conversion from {datatype} to {feature_spec.dtype} can be " f"performed "
-            )
+            _logger.info(f"No conversion from {datatype} to {feature_spec.dtype} can be " f"performed ")
             return False
     else:
         _logger.info(f"Rank of schema {datatype} differs from {feature_spec}")
@@ -124,9 +116,7 @@ def is_structfield_compatible_with_feature_spec(
     structfield: pyspark.sql.types.StructField, name: str, feature_spec: features_spec_type
 ) -> bool:
     if structfield.name != name:
-        _logger.info(
-            f"Mismatched names between structField {structfield.name} and feature spec " f"{name}."
-        )
+        _logger.info(f"Mismatched names between structField {structfield.name} and feature spec " f"{name}.")
         return False
 
     compat = is_datatype_compatible_with_feature_spec(feature_spec, structfield.dataType)
@@ -169,7 +159,5 @@ def is_dataframe_compatible_with_feature_specs(
         compat = is_dataframe_compatible_with_feature_spec(df, name, feature_spec)
         if not compat:
             global_compatibility = False
-            _logger.info(
-                f"Dataframe has no column compatible with feature spec {name}: " f"{feature_spec}."
-            )
+            _logger.info(f"Dataframe has no column compatible with feature spec {name}: " f"{feature_spec}.")
     return global_compatibility

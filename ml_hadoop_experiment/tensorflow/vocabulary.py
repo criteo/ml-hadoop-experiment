@@ -8,9 +8,7 @@ import pyspark
 from cluster_pack import filesystem
 
 
-def _get_columns_values(
-    row: pyspark.Row, column_to_keys: Dict[str, List[str]]
-) -> Iterator[Tuple[Tuple, int]]:
+def _get_columns_values(row: pyspark.Row, column_to_keys: Dict[str, List[str]]) -> Iterator[Tuple[Tuple, int]]:
     """
     col_names: names of columns of interest
     Return: a list of tuple composed of:
@@ -31,18 +29,16 @@ def _get_columns_values(
                         yield ((key, col_value), 1)
 
 
-def _get_vocab_values(
-    rdd: pyspark.RDD, col_dict: Dict[str, List[str]], threshold: int
-) -> Dict[str, List[Any]]:
+def _get_vocab_values(rdd: pyspark.RDD, col_dict: Dict[str, List[str]], threshold: int) -> Dict[str, List[Any]]:
 
     column_to_keys: Dict[str, List[str]] = defaultdict(list)
     for key, values in col_dict.items():
         for column_name in values:
             column_to_keys[column_name].append(key)
 
-    vocab_values_rdd = rdd.flatMap(
-        lambda row: _get_columns_values(row, column_to_keys)
-    ).reduceByKey(lambda x, y: x + y, numPartitions=math.ceil(rdd.getNumPartitions() / 4))
+    vocab_values_rdd = rdd.flatMap(lambda row: _get_columns_values(row, column_to_keys)).reduceByKey(
+        lambda x, y: x + y, numPartitions=math.ceil(rdd.getNumPartitions() / 4)
+    )
 
     # _get_columns_values() will always return a count of 1 for each modality. As a result, a
     # threshold of 0 or 1 on the aggregated count is always going to return true.
@@ -92,9 +88,7 @@ def gen_vocab_files(
 
 
 @gen_vocab_files.register(list)
-def gen_vocab_files_from_list(
-    columns: List[str], rdd: pyspark.RDD, path: str, threshold: int = 0
-) -> List[str]:
+def gen_vocab_files_from_list(columns: List[str], rdd: pyspark.RDD, path: str, threshold: int = 0) -> List[str]:
     """
     columns: names of columns for which to create a vocabulary file (1 file per column)
     path: path where vocabulary files are written

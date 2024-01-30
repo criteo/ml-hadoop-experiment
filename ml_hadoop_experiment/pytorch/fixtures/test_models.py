@@ -59,21 +59,16 @@ class Tokenizer(nn.Module):
     def encode(self, x: List[str]) -> List[List[int]]:
         tokens = []
         for sentence in x:
-            tokens.append(
-                [
-                    self.vocab_en[word] if word in self.vocab_en else self.default_en
-                    for word in sentence.lower().split(" ")
-                ]
-            )
+            tokens.append([
+                self.vocab_en[word] if word in self.vocab_en else self.default_en
+                for word in sentence.lower().split(" ")
+            ])
         return tokens
 
     def decode(self, x: List[List[int]]) -> List[str]:
         sentenses = []
         for tokens in x:
-            words = [
-                self.vocab_fr[token] if token in self.vocab_fr else self.default_fr
-                for token in tokens
-            ]
+            words = [self.vocab_fr[token] if token in self.vocab_fr else self.default_fr for token in tokens]
             sentenses.append(" ".join(words))
         return sentenses
 

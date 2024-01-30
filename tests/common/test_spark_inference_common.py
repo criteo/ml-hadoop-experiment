@@ -32,9 +32,7 @@ def test_get_cuda_device_with_existing_allocations(alloc_map, pid, expected_cuda
     all_pids = []
     for pids in alloc_map.values():
         all_pids.extend(pids)
-    cuda_device = _run_test_get_cuda_device(
-        existing_allocs=alloc_map, pid=pid, existing_pids=all_pids, n_gpus=3
-    )
+    cuda_device = _run_test_get_cuda_device(existing_allocs=alloc_map, pid=pid, existing_pids=all_pids, n_gpus=3)
     assert cuda_device == expected_cuda_device
 
 
@@ -49,9 +47,7 @@ def test_get_cuda_device_caches_cuda_device():
     cleanup()
     with mock.patch(
         "ml_hadoop_experiment.common.spark_inference._get_cuda_device"
-    ) as _get_cuda_device_mock, mock.patch(
-        "ml_hadoop_experiment.common.spark_inference.os.getpid"
-    ) as getpid_mock:
+    ) as _get_cuda_device_mock, mock.patch("ml_hadoop_experiment.common.spark_inference.os.getpid") as getpid_mock:
         _get_cuda_device_mock.return_value = 0
         getpid_mock.return_value = 0
         cuda_device = get_cuda_device(n_gpus=1)
@@ -59,9 +55,7 @@ def test_get_cuda_device_caches_cuda_device():
         _get_cuda_device_mock.assert_called_once()
 
 
-def _run_test_get_cuda_device(
-    existing_allocs: Dict[int, int], pid: int, existing_pids: List[int], n_gpus: int
-) -> int:
+def _run_test_get_cuda_device(existing_allocs: Dict[int, int], pid: int, existing_pids: List[int], n_gpus: int) -> int:
     cleanup()
     with tempfile.NamedTemporaryFile() as lock_tmp, tempfile.NamedTemporaryFile() as allocation_tmp, mock.patch(
         "ml_hadoop_experiment.common.spark_inference.os.getpid"
@@ -72,9 +66,7 @@ def _run_test_get_cuda_device(
             fd.write(json.dumps(existing_allocs))
         getpid_mock.return_value = pid
         all_pids_mock.return_value = existing_pids
-        return get_cuda_device(
-            n_gpus=n_gpus, lock_file=lock_tmp.name, allocation_file=allocation_tmp.name
-        )
+        return get_cuda_device(n_gpus=n_gpus, lock_file=lock_tmp.name, allocation_file=allocation_tmp.name)
 
 
 @contextmanager

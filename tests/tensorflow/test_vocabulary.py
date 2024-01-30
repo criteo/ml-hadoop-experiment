@@ -62,24 +62,20 @@ def test_get_vocab_values(local_spark_session, inputs, threshold, num_partitions
 
 @pytest.mark.parametrize(
     "inputs,threshold,num_partitions,column_mapping,expected",
-    [
-        (
-            [
-                pyspark.Row(feature1=1, feature2=10, feature3=20),
-                pyspark.Row(feature1=1, feature2=13, feature3=25),
-                pyspark.Row(feature1=3, feature2=10, feature3=20),
-                pyspark.Row(feature1=33, feature2=100, feature3=20),
-            ],
-            1,
-            1,
-            {"my_key": ["feature1", "feature2"], "my_key_2": ["feature2", "feature3"]},
-            {"my_key": [1, 3, 10, 13, 33, 100], "my_key_2": [10, 13, 20, 25, 100]},
-        )
-    ],
+    [(
+        [
+            pyspark.Row(feature1=1, feature2=10, feature3=20),
+            pyspark.Row(feature1=1, feature2=13, feature3=25),
+            pyspark.Row(feature1=3, feature2=10, feature3=20),
+            pyspark.Row(feature1=33, feature2=100, feature3=20),
+        ],
+        1,
+        1,
+        {"my_key": ["feature1", "feature2"], "my_key_2": ["feature2", "feature3"]},
+        {"my_key": [1, 3, 10, 13, 33, 100], "my_key_2": [10, 13, 20, 25, 100]},
+    )],
 )
-def test_get_vocab_values_merged(
-    local_spark_session, inputs, threshold, num_partitions, column_mapping, expected
-):
+def test_get_vocab_values_merged(local_spark_session, inputs, threshold, num_partitions, column_mapping, expected):
     rdd = local_spark_session.sparkContext.parallelize(inputs, num_partitions)
     vocab_values = vocabulary._get_vocab_values(rdd, column_mapping, threshold)
 
@@ -119,9 +115,7 @@ def test_write_vocab_files(fs_provider_mock, inputs, path, col_names):
         dictionary[col_name] = [col_name]
     voc_files_list = vocabulary._write_vocab_files(inputs, path, dictionary)
 
-    expected_voc_files_list = {
-        col_name: os.path.join(path, f"{col_name}.voc") for col_name in col_names
-    }
+    expected_voc_files_list = {col_name: os.path.join(path, f"{col_name}.voc") for col_name in col_names}
     assert set(voc_files_list) == set(expected_voc_files_list.values()) == set(ios.keys())
     for col_name in col_names:
         assert (

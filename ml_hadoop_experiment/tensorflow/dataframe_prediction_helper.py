@@ -72,9 +72,7 @@ def _default_extract_fn(fetch_tensors: Dict[str, np.ndarray]) -> pd.Series:
     return pd.Series(fetch_tensors["scores"][:, 1])
 
 
-def estimator_model(
-    sparkSession: pyspark.sql.SparkSession, export_model_path: str
-) -> SerializableObj:
+def estimator_model(sparkSession: pyspark.sql.SparkSession, export_model_path: str) -> SerializableObj:
     """
     Wrap a model built with Estimator API for inference with Spark
     Wrapped model is guaranteed to be broadcastable
@@ -149,9 +147,7 @@ def with_graph_inference_column(
         outputs = next(model.predict(input_fn))
         return postprocessing_fn(outputs)
 
-    return with_inference(
-        df, model, _inference_fn, feature_names, output_column_type, output_column_name
-    )
+    return with_inference(df, model, _inference_fn, feature_names, output_column_type, output_column_name)
 
 
 def with_inference_column(
@@ -187,9 +183,7 @@ def with_inference_column(
         outputs = model.signatures[_default_signature](**{feed_tensor_key: tf.constant(series[0])})
         return postprocessing_fn(outputs)
 
-    return with_inference(
-        df, model, _inference_fn, [tfrecords_col], FloatType(), output_column_name
-    )
+    return with_inference(df, model, _inference_fn, [tfrecords_col], FloatType(), output_column_name)
 
 
 def with_inference(
@@ -259,9 +253,7 @@ def with_inference(
     # output column is referenced more than once,
     # (https://issues.apache.org/jira/browse/SPARK-17728).
     # One workaround is to wrap the pandas udf in sf.explode(sf.array())
-    return df.withColumn(
-        output_column_name, sf.explode(sf.array(inference_udf(*input_column_names)))
-    )
+    return df.withColumn(output_column_name, sf.explode(sf.array(inference_udf(*input_column_names))))
 
 
 def predict_with_tfr(
@@ -283,18 +275,12 @@ def predict_with_tfr(
     def _predict(inputs: List[Dict]) -> List[Any]:
         if not tf.executing_eagerly():
             tf.compat.v1.enable_eager_execution()
-        serialized_tfrecords = [
-            tfrecords.to_tf_proto(e, features_specs).SerializeToString() for e in inputs
-        ]
-        results = estimator.signatures[_default_signature](
-            **{feed_tensor_key: tf.constant(serialized_tfrecords)}
-        )
+        serialized_tfrecords = [tfrecords.to_tf_proto(e, features_specs).SerializeToString() for e in inputs]
+        results = estimator.signatures[_default_signature](**{feed_tensor_key: tf.constant(serialized_tfrecords)})
         return postprocessing_fn(results)
 
     return _predict
 
 
-def filtered_columns(
-    df: pyspark.sql.dataframe.DataFrame, specs: features_specs_type
-) -> List[Column]:
+def filtered_columns(df: pyspark.sql.dataframe.DataFrame, specs: features_specs_type) -> List[Column]:
     return [df[x] for x in df.columns if x in specs.keys()]

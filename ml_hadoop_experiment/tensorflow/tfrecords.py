@@ -36,12 +36,8 @@ def serving_input_receiver_fn_factory(
     input_name: str = "inputs",
 ) -> Callable[[], tf.estimator.export.ServingInputReceiver]:
     def serving_input_receiver_fn() -> tf.estimator.export.ServingInputReceiver:
-        serialized_tfr_example = tf.compat.v1.placeholder(
-            dtype=tf.string, shape=[None], name=input_name
-        )
-        parsed_features = tf.io.parse_example(
-            serialized=serialized_tfr_example, features=features_specs
-        )
+        serialized_tfr_example = tf.compat.v1.placeholder(dtype=tf.string, shape=[None], name=input_name)
+        parsed_features = tf.io.parse_example(serialized=serialized_tfr_example, features=features_specs)
         if feature_transfo_fn:
             parsed_features = feature_transfo_fn(parsed_features)  # type: ignore
         return tf.estimator.export.ServingInputReceiver(
@@ -119,9 +115,7 @@ def _float_feature(value: List[float]) -> tf.train.Feature:
 
 def _string_feature(value: List[Union[str, bytes]]) -> tf.train.Feature:
     return tf.train.Feature(
-        bytes_list=tf.train.BytesList(
-            value=[x.encode() if isinstance(x, str) else x for x in value]
-        )
+        bytes_list=tf.train.BytesList(value=[x.encode() if isinstance(x, str) else x for x in value])
     )
 
 
@@ -238,9 +232,7 @@ def write_example_rdd(
     if not check_full_hdfs_path(export_path):
         raise ValueError(f"{export_path} is not a full hdfs path")
     return tfrecords.mapPartitionsWithIndex(
-        lambda idx, tfrecords: write_example_partition(
-            tfrecords, idx, export_path, compression_type
-        )
+        lambda idx, tfrecords: write_example_partition(tfrecords, idx, export_path, compression_type)
     ).collect()
 
 
@@ -268,9 +260,7 @@ def df_to_tf_record(
     )
 
     _logger.info("writing tf_record files ..")
-    _df.write.format("tfrecords").option("codec", "org.apache.hadoop.io.compress.GzipCodec").save(
-        tf_record_dir
-    )
+    _df.write.format("tfrecords").option("codec", "org.apache.hadoop.io.compress.GzipCodec").save(tf_record_dir)
 
     fs, _ = filesystem.resolve_filesystem_and_path(tf_record_dir)
     files = [f for f in fs.ls(tf_record_dir) if not os.path.basename(f).startswith("_")]

@@ -48,9 +48,7 @@ class PandasSeriesDataset(torch.utils.data.Dataset):
         self.preprocess_fn = preprocess_fn
 
     def __getitem__(self, index: int) -> Tuple[Any, ...]:
-        return self.preprocess_fn(
-            tuple(self.features[i].iloc[index] for i in range(self.n_features))
-        )
+        return self.preprocess_fn(tuple(self.features[i].iloc[index] for i in range(self.n_features)))
 
     def __len__(self) -> int:
         return len(self.features[0])
@@ -104,9 +102,7 @@ def with_inference_column_and_preprocessing(
         dataloader_timeout_secs,
         dataloader_max_retry,
     )
-    return _with_inference_column(
-        df, artifacts, input_cols, _inference_fn, output_type, output_col, num_threads
-    )
+    return _with_inference_column(df, artifacts, input_cols, _inference_fn, output_type, output_col, num_threads)
 
 
 def with_inference_column(
@@ -135,9 +131,7 @@ def with_inference_column(
     :param num_threads: Number of threads to run PyTorch inter/inta-ops
     """
     _inference_fn = _pandas_inference_udf_wrapper(inference_fn, batch_size)
-    return _with_inference_column(
-        df, artifacts, input_cols, _inference_fn, output_type, output_col, num_threads
-    )
+    return _with_inference_column(df, artifacts, input_cols, _inference_fn, output_type, output_col, num_threads)
 
 
 def _tensor_inference_udf_wrapper(
@@ -191,9 +185,7 @@ def _with_retry(func: Callable[[], Any], max_retry: int):
                 raise e
 
 
-def _pandas_inference_udf_wrapper(
-    inference_fn: pandas_inference_udf, batch_size: int
-) -> pandas_inference_udf:
+def _pandas_inference_udf_wrapper(inference_fn: pandas_inference_udf, batch_size: int) -> pandas_inference_udf:
 
     def _wrapper(
         artifacts: artifact_type,

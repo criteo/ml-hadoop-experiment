@@ -36,8 +36,7 @@ def _make_feature_list_scalar(
         else:
             if any(pandas_df[key].isnull().values):
                 raise ValueError(
-                    f"For key {key} some inputs are null in the dataframe, "
-                    f"and no default value was provided"
+                    f"For key {key} some inputs are null in the dataframe, " f"and no default value was provided"
                 )
             features = pandas_df[key].astype(dtype).values
         tensors.append((key, features))  # type: ignore
@@ -99,8 +98,7 @@ def generate_create_tensor_fn(
                     raise NotImplementedError(f"{key} has unknown type: {value.dtype}")
             else:
                 raise NotImplementedError(
-                    f"spec for FixedLenFeature of non-scalar shape not"
-                    f"supported (got {value.shape} for key {key})"
+                    f"spec for FixedLenFeature of non-scalar shape not" f"supported (got {value.shape} for key {key})"
                 )
         else:
             raise NotImplementedError(f"{key} has unknown type: {type(value)}")

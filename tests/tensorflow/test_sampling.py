@@ -27,18 +27,14 @@ from ml_hadoop_experiment.tensorflow.sampling import sample_with_predicate
         (1.0, 0.3, 0.3, 1, True),
     ],
 )
-def test_sampling(
-    local_spark_session, global_sampling, pos_sampling, neg_sampling, count_result, label_is_null
-):
+def test_sampling(local_spark_session, global_sampling, pos_sampling, neg_sampling, count_result, label_is_null):
 
     def add_deterministic_sampling_col_mock(df, _):
         # mock: don't add sampling_hash column
         # so the sampling algo will directly refer to column "sampling_hash" in the DataFrame
         return "sampling_hash", df
 
-    with mock.patch(
-        "ml_hadoop_experiment.tensorflow.sampling.add_deterministic_sampling_col"
-    ) as mock_sampling_col:
+    with mock.patch("ml_hadoop_experiment.tensorflow.sampling.add_deterministic_sampling_col") as mock_sampling_col:
         mock_sampling_col.side_effect = add_deterministic_sampling_col_mock
 
         ldf = pd.DataFrame.from_records(
@@ -77,9 +73,7 @@ def test_sampling_weight_column(local_spark_session):
         # so the sampling algo will directly refer to column "sampling_hash" in the DataFrame
         return "sampling_hash", df
 
-    with mock.patch(
-        "ml_hadoop_experiment.tensorflow.sampling.add_deterministic_sampling_col"
-    ) as mock_sampling_col:
+    with mock.patch("ml_hadoop_experiment.tensorflow.sampling.add_deterministic_sampling_col") as mock_sampling_col:
         mock_sampling_col.side_effect = add_deterministic_sampling_col_mock
 
         ldf = pd.DataFrame.from_records(
@@ -100,9 +94,7 @@ def test_sampling_weight_column(local_spark_session):
 
         df = local_spark_session.createDataFrame(ldf)
 
-        df_result = sample_with_predicate(
-            df, 0.9, 0.5, 0.9, df["label"] > 0, ["feature1", "feature2"]
-        )
+        df_result = sample_with_predicate(df, 0.9, 0.5, 0.9, df["label"] > 0, ["feature1", "feature2"])
 
         # total positive sampling is 0.9*0.5 = 0.45
         # total negative sampling is 0.9*0.9 = 0.81

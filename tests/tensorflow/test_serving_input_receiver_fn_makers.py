@@ -10,8 +10,8 @@ def test_featurespec_to_input_placeholders():
         "dim2": tf.io.VarLenFeature(dtype=tf.string),
     }
 
-    raw_tensors, prediction_input_tensors = (
-        serving_input_receiver_fn_makers.featurespec_to_input_placeholders(feature_spec)
+    raw_tensors, prediction_input_tensors = serving_input_receiver_fn_makers.featurespec_to_input_placeholders(
+        feature_spec
     )
 
     assert len(raw_tensors) == 4

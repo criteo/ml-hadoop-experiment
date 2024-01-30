@@ -47,16 +47,12 @@ from ml_hadoop_experiment.tensorflow.dataframe_to_tf_helper import (
             True,
         ),
         (
-            pyspark.sql.types.ArrayType(
-                pyspark.sql.types.ArrayType(pyspark.sql.types.LongType(), False), False
-            ),
+            pyspark.sql.types.ArrayType(pyspark.sql.types.ArrayType(pyspark.sql.types.LongType(), False), False),
             tf.io.FixedLenFeature([2], dtype=tf.int64),
             False,
         ),
         (
-            pyspark.sql.types.ArrayType(
-                pyspark.sql.types.ArrayType(pyspark.sql.types.LongType(), False), False
-            ),
+            pyspark.sql.types.ArrayType(pyspark.sql.types.ArrayType(pyspark.sql.types.LongType(), False), False),
             tf.io.FixedLenFeature([2, 2], dtype=tf.int64),
             True,
         ),
@@ -113,8 +109,6 @@ def test_is_datatype_compatible_with_feature_spec(column_type, feature_spec, exp
         ),
     ],
 )
-def test_is_structfield_compatible_with_feature_spec(
-    structfield, name, feature_spec, expected_result
-):
+def test_is_structfield_compatible_with_feature_spec(structfield, name, feature_spec, expected_result):
     result = is_structfield_compatible_with_feature_spec(structfield, name, feature_spec)
     assert expected_result == result
