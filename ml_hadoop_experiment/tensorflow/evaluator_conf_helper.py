@@ -13,16 +13,16 @@ def get_eval_params(
     nb_workers: int,
     nb_evaluators: int,
     nb_examples_before_eval: int,
-    max_eval_batch_size: int = 100000
-) -> 'Eval_config':
-    '''
+    max_eval_batch_size: int = 100000,
+) -> "Eval_config":
+    """
     Helper to compute coherent parameters for model evaluation
-    '''
+    """
     for var, val in {
-        'nb_examples_before_eval': nb_examples_before_eval,
-        'nb_workers': nb_workers,
-        'nb_evaluators': nb_evaluators,
-        'max_eval_batch_size': max_eval_batch_size
+        "nb_examples_before_eval": nb_examples_before_eval,
+        "nb_workers": nb_workers,
+        "nb_evaluators": nb_evaluators,
+        "max_eval_batch_size": max_eval_batch_size,
     }.items():
         if val <= 0:
             raise ValueError(f"{var} can't be <= 0. Got {val}")
@@ -41,9 +41,4 @@ def get_eval_params(
         evaluation_batch_size = evaluation_batch_size / steps
     # Don't really know how to compute this parameter so le'ts be consevative
     throttle_secs = 5
-    return Eval_config(
-        throttle_secs,
-        save_checkpoints_steps,
-        int(evaluation_batch_size),
-        steps
-    )
+    return Eval_config(throttle_secs, save_checkpoints_steps, int(evaluation_batch_size), steps)

@@ -11,7 +11,9 @@ except ImportError:
     pass
 
 
-def build_eval_only_model(model: Union[Model, legacy_keras.Model], metrics: Optional[List[Any]] = None) -> Model:
+def build_eval_only_model(
+    model: Union[Model, legacy_keras.Model], metrics: Optional[List[Any]] = None
+) -> Model:
     """builds a model for evaluation only.
 
     Arguments:
@@ -32,7 +34,7 @@ def build_eval_only_model(model: Union[Model, legacy_keras.Model], metrics: Opti
 
     eval_model = Model(inputs=inputs, outputs=outputs)
 
-    optimizer = 'adam'  # will not be used, the model is not trainable
+    optimizer = "adam"  # will not be used, the model is not trainable
     eval_model.compile(optimizer=optimizer, loss=model.loss, weighted_metrics=metrics)
     return eval_model
 
@@ -87,14 +89,17 @@ def evaluate_bootstrap(
             sample_weights = {name: bootstrap_weights for name in eval_only.output_names}
         else:
             sample_weights = {
-                name: bootstrap_weights * column for name, column in zip(eval_only.output_names, weight_columns)
+                name: bootstrap_weights * column
+                for name, column in zip(eval_only.output_names, weight_columns)
             }
 
-        results.append(eval_only.evaluate(predictions, labels, sample_weight=sample_weights, verbose=0))
+        results.append(
+            eval_only.evaluate(predictions, labels, sample_weight=sample_weights, verbose=0)
+        )
     metrics_names = (
         eval_only.metrics_names
         if weight_transform is not None
-        else map(lambda s: s.replace('weighted_', ''), eval_only.metrics_names)
+        else map(lambda s: s.replace("weighted_", ""), eval_only.metrics_names)
     )  # this is needed for tensoflow 1.15 which adds a 'weighted_' to the metrics name
 
     return {metric: values for (metric, values) in zip(metrics_names, np.array(results).T.tolist())}

@@ -2,8 +2,7 @@ from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import tensorflow as tf
 
-from ml_hadoop_experiment.tensorflow.tfrecords import (features_specs_type,
-                                                       transfo_fn_type)
+from ml_hadoop_experiment.tensorflow.tfrecords import features_specs_type, transfo_fn_type
 
 
 def featurespec_to_input_placeholders(
@@ -46,18 +45,24 @@ def featurespec_to_input_placeholders(
             indices_key = k + "/indices"
             values_key = k + "/values"
 
-            shape_placeholder = tf.compat.v1.placeholder(tf.int64, shape=[2], name=make_placeholder_name(shape_key))
+            shape_placeholder = tf.compat.v1.placeholder(
+                tf.int64, shape=[2], name=make_placeholder_name(shape_key)
+            )
             indices_placeholder = tf.compat.v1.placeholder(
                 tf.int64, shape=[None, 2], name=make_placeholder_name(indices_key)
             )
-            values_placeholder = tf.compat.v1.placeholder(v.dtype, shape=[None], name=make_placeholder_name(values_key))
+            values_placeholder = tf.compat.v1.placeholder(
+                v.dtype, shape=[None], name=make_placeholder_name(values_key)
+            )
 
             raw_tensors[shape_key] = shape_placeholder
             raw_tensors[indices_key] = indices_placeholder
             raw_tensors[values_key] = values_placeholder
 
             prediction_input_tensors[k] = tf.SparseTensor(
-                indices=indices_placeholder, values=values_placeholder, dense_shape=shape_placeholder
+                indices=indices_placeholder,
+                values=values_placeholder,
+                dense_shape=shape_placeholder,
             )
         else:
             raise NotImplementedError(f"Unknown feature spec type {v}")
@@ -82,7 +87,9 @@ def make_raw_serving_input_receiver_fn(
 
     def serving_input_receiver_fn() -> Any:
         # generate all tensor placeholders:
-        raw_tensors, prediction_input_tensors = featurespec_to_input_placeholders(feature_spec, batched_predictions)
+        raw_tensors, prediction_input_tensors = featurespec_to_input_placeholders(
+            feature_spec, batched_predictions
+        )
 
         # Add transformations (for instance, feature transfos) to prediction_input_tensors
         transform_input_tensor(prediction_input_tensors)  # type: ignore
@@ -104,11 +111,15 @@ def make_raw_serving_input_receiver_fn(
 def make_default_serving_input_receiver_fn(
     features_specs: features_specs_type,
     feature_transfo_fn: Optional[transfo_fn_type] = None,
-    input_name: str = 'inputs',
+    input_name: str = "inputs",
 ) -> Callable[[], tf.estimator.export.ServingInputReceiver]:
     def serving_input_receiver_fn() -> tf.estimator.export.ServingInputReceiver:
-        serialized_tfr_example = tf.compat.v1.placeholder(dtype=tf.string, shape=[None], name=input_name)
-        parsed_features = tf.io.parse_example(serialized=serialized_tfr_example, features=features_specs)
+        serialized_tfr_example = tf.compat.v1.placeholder(
+            dtype=tf.string, shape=[None], name=input_name
+        )
+        parsed_features = tf.io.parse_example(
+            serialized=serialized_tfr_example, features=features_specs
+        )
         if feature_transfo_fn:
             parsed_features = feature_transfo_fn(parsed_features)  # type: ignore
         return tf.estimator.export.ServingInputReceiver(

@@ -6,14 +6,17 @@ import pytest
 import torch
 from pyspark.sql.types import ArrayType, DoubleType, StringType
 
-from ml_hadoop_experiment.common.spark_inference import (SerializableObj,
-                                                         artifact_type)
+from ml_hadoop_experiment.common.spark_inference import SerializableObj, artifact_type
 from ml_hadoop_experiment.pytorch import spark_inference
-from ml_hadoop_experiment.pytorch.fixtures.test_models import (load_reducer,
-                                                               load_tokenizer,
-                                                               load_translator)
+from ml_hadoop_experiment.pytorch.fixtures.test_models import (
+    load_reducer,
+    load_tokenizer,
+    load_translator,
+)
 from ml_hadoop_experiment.pytorch.spark_inference import (
-    with_inference_column, with_inference_column_and_preprocessing)
+    with_inference_column,
+    with_inference_column_and_preprocessing,
+)
 
 
 def test_with_inference_column_and_serializable_model(local_spark_session):
@@ -31,7 +34,9 @@ def test_with_inference_column_on_gpus(local_spark_session, on_gpu):
 
 @pytest.mark.parametrize("serialize_objs", [(True,), (False,)])
 def test_with_inference_column_with_multiple_artifacts(local_spark_session, serialize_objs):
-    def run_prediction(artifacts: artifact_type, features: Tuple[pd.Series, ...], device: str) -> pd.Series:
+    def run_prediction(
+        artifacts: artifact_type, features: Tuple[pd.Series, ...], device: str
+    ) -> pd.Series:
         model, tokenizer = artifacts
         tokens = tokenizer.encode(features[0])
         predictions = model(tokens)
@@ -78,13 +83,17 @@ def test_with_retry():
 
 @pytest.mark.parametrize("on_gpu", [True, False])
 def test_with_inference_column_and_preprocessing(local_spark_session, on_gpu):
-    def preprocessing_fn(_: artifact_type, features: Tuple[Any, ...], _device: str) -> Tuple[torch.Tensor, ...]:
+    def preprocessing_fn(
+        _: artifact_type, features: Tuple[Any, ...], _device: str
+    ) -> Tuple[torch.Tensor, ...]:
         assert _device == "cpu" if not on_gpu else "cuda:0"
         feature1 = torch.Tensor(features[0].tolist()) + 10
         feature2 = torch.Tensor(features[1].tolist()) + 5
         return feature1, feature2
 
-    def inference_fn(model: artifact_type, features: Tuple[torch.Tensor, ...], _device: str) -> Tuple[Any, ...]:
+    def inference_fn(
+        model: artifact_type, features: Tuple[torch.Tensor, ...], _device: str
+    ) -> Tuple[Any, ...]:
         assert _device == "cpu" if not on_gpu else "cuda:0"
         results = model(*features)
         return results.numpy()
@@ -118,12 +127,18 @@ def test_with_inference_column_and_preprocessing(local_spark_session, on_gpu):
 
 def test_with_inference_column_and_preprocessing_computed_once(local_spark_session):
 
-    def preprocessing_fn(counter: artifact_type, features: Tuple[Any, ...], device: str) -> Tuple[torch.Tensor, ...]:
+    def preprocessing_fn(
+        counter: artifact_type, features: Tuple[Any, ...], device: str
+    ) -> Tuple[torch.Tensor, ...]:
         return features
 
-    def inference_fn(counter: artifact_type, features: Tuple[torch.Tensor, ...], device: str) -> Tuple[Any, ...]:
+    def inference_fn(
+        counter: artifact_type, features: Tuple[torch.Tensor, ...], device: str
+    ) -> Tuple[Any, ...]:
         counter["value"] += 1
-        return tuple(zip(features[0].numpy() + counter["value"], features[1].numpy() + counter["value"]))
+        return tuple(
+            zip(features[0].numpy() + counter["value"], features[1].numpy() + counter["value"])
+        )
 
     ss = local_spark_session
     df = ss.createDataFrame([(2.0, 3.0), (12.0, 13.0)], ["feature1", "feature2"])
@@ -150,7 +165,9 @@ def test_with_inference_column_and_preprocessing_computed_once(local_spark_sessi
 
 def test_with_inference_column_computed_once(local_spark_session):
 
-    def inference_fn(counter: artifact_type, features: Tuple[pd.Series, ...], device: str) -> pd.Series:
+    def inference_fn(
+        counter: artifact_type, features: Tuple[pd.Series, ...], device: str
+    ) -> pd.Series:
         counter["value"] += 1
         return pd.Series(zip(features[0] + counter["value"], features[1] + counter["value"]))
 
@@ -177,7 +194,9 @@ def test_with_inference_column_computed_once(local_spark_session):
 
 
 def run_with_inference_column(local_spark_session, serialize_model: bool, on_gpu: bool):
-    def run_prediction(model: artifact_type, features: Tuple[pd.Series, ...], device: str) -> pd.Series:
+    def run_prediction(
+        model: artifact_type, features: Tuple[pd.Series, ...], device: str
+    ) -> pd.Series:
         assert device == "cpu" if not on_gpu else "cuda:0"
         predictions = model(torch.Tensor(features[0].tolist()), torch.Tensor(features[1].tolist()))
         return pd.Series(predictions.tolist())

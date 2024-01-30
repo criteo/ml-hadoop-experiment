@@ -2,10 +2,7 @@ import typing
 
 import pytest
 
-from ml_hadoop_experiment.tensorflow.evaluator_conf_helper import (
-    Eval_config,
-    get_eval_params
-)
+from ml_hadoop_experiment.tensorflow.evaluator_conf_helper import Eval_config, get_eval_params
 
 
 class User_params(typing.NamedTuple):
@@ -17,7 +14,7 @@ class User_params(typing.NamedTuple):
 
 tests_with_good_params = [
     (User_params(50, 1, 50000, 100000), Eval_config(5, 50000, 1000, 1)),
-    (User_params(50, 1, 5000000, 50000), Eval_config(5, 5000000, 50000, 2))
+    (User_params(50, 1, 5000000, 50000), Eval_config(5, 5000000, 50000, 2)),
 ]
 
 tests_with_bad_params = [
@@ -28,7 +25,7 @@ tests_with_bad_params = [
     User_params(-50, 1, 5000000, 50000),
     User_params(50, -1, 5000000, 50000),
     User_params(50, 1, -5000000, 50000),
-    User_params(50, 1, 5000000, -50000)
+    User_params(50, 1, 5000000, -50000),
 ]
 
 

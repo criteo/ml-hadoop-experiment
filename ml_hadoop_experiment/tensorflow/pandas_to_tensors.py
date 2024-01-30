@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from ml_hadoop_experiment.tensorflow.numpy_to_sparse_tensors import \
-    create_sparse_np_stacked
+from ml_hadoop_experiment.tensorflow.numpy_to_sparse_tensors import create_sparse_np_stacked
 
 add_to_list_type = Callable[[pd.DataFrame, List[Tuple[str, np.ndarray]]], None]
 
@@ -37,7 +36,8 @@ def _make_feature_list_scalar(
         else:
             if any(pandas_df[key].isnull().values):
                 raise ValueError(
-                    f"For key {key} some inputs are null in the dataframe, " f"and no default value was provided"
+                    f"For key {key} some inputs are null in the dataframe, "
+                    f"and no default value was provided"
                 )
             features = pandas_df[key].astype(dtype).values
         tensors.append((key, features))  # type: ignore
@@ -64,7 +64,9 @@ def _make_feature_list_varlen(key: str, dtype: Any) -> add_to_list_type:
     return add_tensors
 
 
-def generate_create_tensor_fn(feature_spec: features_specs_type) -> Callable[[pd.DataFrame], Dict[str, np.ndarray]]:
+def generate_create_tensor_fn(
+    feature_spec: features_specs_type,
+) -> Callable[[pd.DataFrame], Dict[str, np.ndarray]]:
     """
     From a feature_spec, generate all the necessary converters that will be able to transform
     a pandas dataframe to a container of tensors.
@@ -88,19 +90,20 @@ def generate_create_tensor_fn(feature_spec: features_specs_type) -> Callable[[pd
             if value.dtype in tf_to_np:
                 gen = _make_feature_list_varlen(key, tf_to_np[value.dtype])  # type: ignore
             else:
-                raise NotImplementedError(f'{key} has unknown type: {value.dtype}')
+                raise NotImplementedError(f"{key} has unknown type: {value.dtype}")
         elif isinstance(value, tf.io.FixedLenFeature):
             if len(value.shape) == 0 or (len(value.shape) == 1 and value.shape[0] == 1):  # type: ignore
                 if value.dtype in tf_to_np:
                     gen = _make_feature_list_scalar(key, value.default_value, tf_to_np[value.dtype])  # type: ignore
                 else:
-                    raise NotImplementedError(f'{key} has unknown type: {value.dtype}')
+                    raise NotImplementedError(f"{key} has unknown type: {value.dtype}")
             else:
                 raise NotImplementedError(
-                    f"spec for FixedLenFeature of non-scalar shape not" f"supported (got {value.shape} for key {key})"
+                    f"spec for FixedLenFeature of non-scalar shape not"
+                    f"supported (got {value.shape} for key {key})"
                 )
         else:
-            raise NotImplementedError(f'{key} has unknown type: {type(value)}')
+            raise NotImplementedError(f"{key} has unknown type: {type(value)}")
 
         generators.append(gen)
 

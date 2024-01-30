@@ -27,18 +27,14 @@ class _SerializableObjWrapper(object):
     We override __getstate__() and __setstate__() to allow easy serialization
     of this instance on the workers when this is used in a UDF.
     """
-    def __init__(
-        self, load_fn: load_fn_type, *load_fn_args: Any
-    ):
+
+    def __init__(self, load_fn: load_fn_type, *load_fn_args: Any):
         self.obj = load_fn(*load_fn_args)
         self.load_fn_args = load_fn_args
         self.load_fn = load_fn
 
     def __getstate__(self) -> Dict[str, Any]:
-        return {
-            "load_fn": self.load_fn,
-            "load_fn_args": self.load_fn_args
-        }
+        return {"load_fn": self.load_fn, "load_fn_args": self.load_fn_args}
 
     def __setstate__(self, state: Dict[str, Any]) -> None:
         self.load_fn_args = state["load_fn_args"]
@@ -47,13 +43,12 @@ class _SerializableObjWrapper(object):
 
 class SerializableObj(object):
     def __init__(
-        self, sparkSession: pyspark.sql.SparkSession,
-        load_fn: load_fn_type, *load_fn_args: Any
+        self, sparkSession: pyspark.sql.SparkSession, load_fn: load_fn_type, *load_fn_args: Any
     ):
         self.ew = _SerializableObjWrapper(load_fn, *load_fn_args)
         self.broadcast = sparkSession.sparkContext.broadcast(self.ew)
 
-    def __enter__(self) -> 'SerializableObj':
+    def __enter__(self) -> "SerializableObj":
         return self
 
     def __exit__(self, *exc_details: Any) -> None:
@@ -89,9 +84,9 @@ def _allocate_cuda_device(
     if cuda_device:
         return cuda_device, new_allocation_map
 
-    new_sorted_allocation_map = dict(sorted(
-        new_allocation_map.items(), key=lambda item: len(item[1])
-    ))
+    new_sorted_allocation_map = dict(
+        sorted(new_allocation_map.items(), key=lambda item: len(item[1]))
+    )
     cuda, pids = list(new_sorted_allocation_map.items())[0]
     pids.add(pid)
     return cuda, new_sorted_allocation_map
@@ -103,14 +98,15 @@ def _get_cuda_device(n_gpus: int, pid: int, allocation_file: str) -> int:
         new_allocation_map = {cuda_device: [pid]}
         for cuda in range(1, n_gpus):
             new_allocation_map[cuda] = []
-        with open(allocation_file, 'w') as fp:
+        with open(allocation_file, "w") as fp:
             fp.write(json.dumps(new_allocation_map))
     else:
-        with open(allocation_file, 'r+') as fp:
+        with open(allocation_file, "r+") as fp:
             allocation_map = json.loads(fp.read())
             allocation_map = {int(cuda): set(pids) for cuda, pids in allocation_map.items()}
-            cuda_device, _new_allocation_map = \
-                _allocate_cuda_device(n_gpus, allocation_map, _get_all_pids(), pid)
+            cuda_device, _new_allocation_map = _allocate_cuda_device(
+                n_gpus, allocation_map, _get_all_pids(), pid
+            )
             fp.seek(0)
             fp.write(json.dumps({cuda: list(pids) for cuda, pids in _new_allocation_map.items()}))
             fp.truncate()
@@ -124,9 +120,7 @@ def _get_all_pids() -> Set[int]:
 # Method used to dispatch Spark tasks on GPUs of a GPU machine
 # A GPU can be shared between tasks. This method uniformly allocates GPUs to tasks
 def get_cuda_device(
-    n_gpus: int,
-    lock_file: str = "/tmp/lockfile",
-    allocation_file: str = "/tmp/allocation_cuda"
+    n_gpus: int, lock_file: str = "/tmp/lockfile", allocation_file: str = "/tmp/allocation_cuda"
 ) -> int:
     # Python workers are reused by default. In that case we can allocate the GPU only
     # once by storing the allocated GPU in env var

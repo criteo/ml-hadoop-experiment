@@ -12,13 +12,13 @@ from ml_hadoop_experiment.tensorflow import pandas_to_tensors
         ([1, 2, None, 4], [1, 2, 3, 4], 3, np.int32),
         ([1.0, 2.0, None, 4.0], [1, 2, 3, 4], 3, np.int32),
         ([1.5, 2.5, None, 4.5], [1.5, 2.5, 3.5, 4.5], 3.5, np.float64),
-        (['a', 'b', None, 'd'], ['a', 'b', 'c', 'd'], "c", str),
+        (["a", "b", None, "d"], ["a", "b", "c", "d"], "c", str),
     ],
 )
 def test_make_feature_list_scalar(init_data, result_data, default_value, dtype):
     fun = pandas_to_tensors._make_feature_list_scalar("toto", default_value, dtype)
     list_ = []
-    d = {'toto': init_data}
+    d = {"toto": init_data}
     df = pd.DataFrame(data=d)
     fun(df, list_)
 
@@ -28,12 +28,13 @@ def test_make_feature_list_scalar(init_data, result_data, default_value, dtype):
 
 
 @pytest.mark.parametrize(
-    "init_data,type", [([1, 2, None, 4], np.int32), ([1.5, 2.5, None, 4.5], np.float64), (['v', None], str)]
+    "init_data,type",
+    [([1, 2, None, 4], np.int32), ([1.5, 2.5, None, 4.5], np.float64), (["v", None], str)],
 )
 def test_make_feature_list_scalar_no_default(init_data, type):
     fun = pandas_to_tensors._make_feature_list_scalar("toto", None, type)
     list_ = []
-    d = {'toto': init_data}
+    d = {"toto": init_data}
     df = pd.DataFrame(data=d)
 
     with pytest.raises(ValueError):
@@ -43,7 +44,7 @@ def test_make_feature_list_scalar_no_default(init_data, type):
 def test_make_feature_list_varlen():
     fun = pandas_to_tensors._make_feature_list_varlen("toto", str)
     list_ = []
-    d = {'toto': [['a', 'b'], ['c', 'd'], None, ['e']]}
+    d = {"toto": [["a", "b"], ["c", "d"], None, ["e"]]}
     df = pd.DataFrame(data=d)
     fun(df, list_)
 
@@ -56,13 +57,13 @@ def test_make_feature_list_varlen():
     assert np.array_equal(list_[1][1], [[0, 0], [0, 1], [1, 0], [1, 1], [3, 0]])
 
     assert list_[2][0] == "toto/values"
-    assert np.array_equal(list_[2][1], ['a', 'b', 'c', 'd', 'e'])
+    assert np.array_equal(list_[2][1], ["a", "b", "c", "d", "e"])
 
 
 def test_make_feature_list_varlen_empty():
     fun = pandas_to_tensors._make_feature_list_varlen("toto", str)
     list_ = []
-    d = {'toto': [[], []]}
+    d = {"toto": [[], []]}
     df = pd.DataFrame(data=d)
     fun(df, list_)
 
@@ -80,7 +81,7 @@ def test_make_feature_list_varlen_empty():
 
 def test_generate_create_tensor_fn():
     specs = {"dim": tf.io.FixedLenFeature(shape=[], dtype=tf.int64)}
-    d = {'dim': [1, 2]}
+    d = {"dim": [1, 2]}
     df = pd.DataFrame(data=d)
 
     make_tensors = pandas_to_tensors.generate_create_tensor_fn(specs)

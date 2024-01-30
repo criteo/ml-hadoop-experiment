@@ -10,15 +10,17 @@ from pyspark.sql import functions as sf
 from pyspark.sql.column import Column
 from pyspark.sql.types import DataType, FloatType
 
-from ml_hadoop_experiment.common.spark_inference import (SerializableObj,
-                                                         artifact_type,
-                                                         broadcast,
-                                                         from_broadcasted,
-                                                         get_cuda_device, log,
-                                                         split_in_batches)
+from ml_hadoop_experiment.common.spark_inference import (
+    SerializableObj,
+    artifact_type,
+    broadcast,
+    from_broadcasted,
+    get_cuda_device,
+    log,
+    split_in_batches,
+)
 from ml_hadoop_experiment.tensorflow import tfrecords
-from ml_hadoop_experiment.tensorflow.predictor import (Predictor, feeds_type,
-                                                       fetches_type)
+from ml_hadoop_experiment.tensorflow.predictor import Predictor, feeds_type, fetches_type
 
 _logger = logging.getLogger(__file__)
 
@@ -34,7 +36,7 @@ inference_udf = Callable[[artifact_type, Tuple[pd.Series, ...]], pd.Series]
 
 
 def _canned_linear_classifier_extract_prediction_fn(fetch_tensors: Dict[str, List]) -> List[float]:
-    '''
+    """
     fetch_tensors: output of canned LinearClassifier estimator:
         {
             'scores': [
@@ -46,12 +48,12 @@ def _canned_linear_classifier_extract_prediction_fn(fetch_tensors: Dict[str, Lis
         }
 
     Return: probabilities of class 1 (which is the positive class for binary classfiers)
-    '''
-    return [float(s[1]) for s in fetch_tensors['scores']]
+    """
+    return [float(s[1]) for s in fetch_tensors["scores"]]
 
 
 def _default_extract_fn(fetch_tensors: Dict[str, np.ndarray]) -> pd.Series:
-    '''
+    """
     Extract probabilities of the first class, which corresponds to the positive class
     for binary classifiers.
 
@@ -66,11 +68,13 @@ def _default_extract_fn(fetch_tensors: Dict[str, np.ndarray]) -> pd.Series:
         }
 
     Return: probabilities of class 1
-    '''
+    """
     return pd.Series(fetch_tensors["scores"][:, 1])
 
 
-def estimator_model(sparkSession: pyspark.sql.SparkSession, export_model_path: str) -> SerializableObj:
+def estimator_model(
+    sparkSession: pyspark.sql.SparkSession, export_model_path: str
+) -> SerializableObj:
     """
     Wrap a model built with Estimator API for inference with Spark
     Wrapped model is guaranteed to be broadcastable
@@ -87,7 +91,10 @@ def keras_model(sparkSession: pyspark.sql.SparkSession, export_model_path: str) 
 
 
 def graph_model(
-    sparkSession: pyspark.sql.SparkSession, export_model_path: str, feeds: feeds_type, fetches: fetches_type
+    sparkSession: pyspark.sql.SparkSession,
+    export_model_path: str,
+    feeds: feeds_type,
+    fetches: fetches_type,
 ) -> SerializableObj:
     """
     Wrap a graph model for inference with Spark
@@ -130,7 +137,7 @@ def with_graph_inference_column(
             _series = []
             for serie in series:
                 if len(serie.values[0].shape) == 0:
-                    _series.append(serie.values.reshape(batch_size, 1)) # type: ignore
+                    _series.append(serie.values.reshape(batch_size, 1))  # type: ignore
                 elif isinstance(serie.values[0], np.ndarray):
                     _series.append([e.tolist() for e in serie.values])
                 else:
@@ -142,7 +149,9 @@ def with_graph_inference_column(
         outputs = next(model.predict(input_fn))
         return postprocessing_fn(outputs)
 
-    return with_inference(df, model, _inference_fn, feature_names, output_column_type, output_column_name)
+    return with_inference(
+        df, model, _inference_fn, feature_names, output_column_type, output_column_name
+    )
 
 
 def with_inference_column(
@@ -178,7 +187,9 @@ def with_inference_column(
         outputs = model.signatures[_default_signature](**{feed_tensor_key: tf.constant(series[0])})
         return postprocessing_fn(outputs)
 
-    return with_inference(df, model, _inference_fn, [tfrecords_col], FloatType(), output_column_name)
+    return with_inference(
+        df, model, _inference_fn, [tfrecords_col], FloatType(), output_column_name
+    )
 
 
 def with_inference(
@@ -248,7 +259,9 @@ def with_inference(
     # output column is referenced more than once,
     # (https://issues.apache.org/jira/browse/SPARK-17728).
     # One workaround is to wrap the pandas udf in sf.explode(sf.array())
-    return df.withColumn(output_column_name, sf.explode(sf.array(inference_udf(*input_column_names))))
+    return df.withColumn(
+        output_column_name, sf.explode(sf.array(inference_udf(*input_column_names)))
+    )
 
 
 def predict_with_tfr(
@@ -257,25 +270,31 @@ def predict_with_tfr(
     postprocessing_fn: Callable = _canned_linear_classifier_extract_prediction_fn,
     feed_tensor_key: str = "inputs",
 ) -> estimator_type:
-    '''
+    """
     features_specs: specifications of your model input features
     model_path: path to your model
     postprocessing_fn: postprocessing function called on your model outputs
     The primary purpose of this functon is to extract the relevant scores/predictions of
     your model outputs but it is not limited to this use case.
     feed_tensor_key: feed tensor key to feed your model with inputs
-    '''
+    """
     estimator = tf.compat.v1.saved_model.load_v2(model_path)
 
     def _predict(inputs: List[Dict]) -> List[Any]:
         if not tf.executing_eagerly():
             tf.compat.v1.enable_eager_execution()
-        serialized_tfrecords = [tfrecords.to_tf_proto(e, features_specs).SerializeToString() for e in inputs]
-        results = estimator.signatures[_default_signature](**{feed_tensor_key: tf.constant(serialized_tfrecords)})
+        serialized_tfrecords = [
+            tfrecords.to_tf_proto(e, features_specs).SerializeToString() for e in inputs
+        ]
+        results = estimator.signatures[_default_signature](
+            **{feed_tensor_key: tf.constant(serialized_tfrecords)}
+        )
         return postprocessing_fn(results)
 
     return _predict
 
 
-def filtered_columns(df: pyspark.sql.dataframe.DataFrame, specs: features_specs_type) -> List[Column]:
+def filtered_columns(
+    df: pyspark.sql.dataframe.DataFrame, specs: features_specs_type
+) -> List[Column]:
     return [df[x] for x in df.columns if x in specs.keys()]

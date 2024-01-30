@@ -19,9 +19,7 @@ class ToyModel(nn.Module):
         self.softmax = nn.Softmax()
 
     def forward(self, feature1: torch.Tensor, feature2: torch.Tensor) -> torch.Tensor:
-        features = torch.stack([
-            torch.squeeze(feature1), torch.squeeze(feature2)
-        ], dim=1)
+        features = torch.stack([torch.squeeze(feature1), torch.squeeze(feature2)], dim=1)
         output1 = self.hidden1(features)
         output2 = self.hidden2(output1)
         return self.softmax(output2)
@@ -47,21 +45,9 @@ class Translator(nn.Module):
 
 class Tokenizer(nn.Module):
 
-    vocab_en = {
-        "hello": 1,
-        "world": 2,
-        "how": 3,
-        "are": 4,
-        "you": 5
-    }
+    vocab_en = {"hello": 1, "world": 2, "how": 3, "are": 4, "you": 5}
 
-    vocab_fr = {
-        1: "bonjour",
-        2: "tout le monde",
-        3: "comment",
-        4: "vas",
-        5: "tu"
-    }
+    vocab_fr = {1: "bonjour", 2: "tout le monde", 3: "comment", 4: "vas", 5: "tu"}
 
     default_en = 0
 
@@ -73,10 +59,12 @@ class Tokenizer(nn.Module):
     def encode(self, x: List[str]) -> List[List[int]]:
         tokens = []
         for sentence in x:
-            tokens.append([
-                self.vocab_en[word] if word in self.vocab_en else self.default_en
-                for word in sentence.lower().split(" ")
-            ])
+            tokens.append(
+                [
+                    self.vocab_en[word] if word in self.vocab_en else self.default_en
+                    for word in sentence.lower().split(" ")
+                ]
+            )
         return tokens
 
     def decode(self, x: List[List[int]]) -> List[str]:

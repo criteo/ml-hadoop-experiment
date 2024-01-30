@@ -9,11 +9,14 @@ from pyspark.sql import functions as sf
 from pyspark.sql.types import DataType
 from torch.utils.data import DataLoader
 
-from ml_hadoop_experiment.common.spark_inference import (artifact_type,
-                                                         broadcast,
-                                                         from_broadcasted,
-                                                         get_cuda_device, log,
-                                                         split_in_batches)
+from ml_hadoop_experiment.common.spark_inference import (
+    artifact_type,
+    broadcast,
+    from_broadcasted,
+    get_cuda_device,
+    log,
+    split_in_batches,
+)
 
 _logger = logging.getLogger(__file__)
 
@@ -36,14 +39,18 @@ tensor_inference_udf = Callable[[artifact_type, Tuple[torch.Tensor, ...], str], 
 
 class PandasSeriesDataset(torch.utils.data.Dataset):
     def __init__(
-        self, features: Tuple[pd.Series, ...], preprocess_fn: Callable[[Tuple[Any, ...]], Tuple[torch.Tensor, ...]]
+        self,
+        features: Tuple[pd.Series, ...],
+        preprocess_fn: Callable[[Tuple[Any, ...]], Tuple[torch.Tensor, ...]],
     ):
         self.features = features
         self.n_features = len(features)
         self.preprocess_fn = preprocess_fn
 
     def __getitem__(self, index: int) -> Tuple[Any, ...]:
-        return self.preprocess_fn(tuple(self.features[i].iloc[index] for i in range(self.n_features)))
+        return self.preprocess_fn(
+            tuple(self.features[i].iloc[index] for i in range(self.n_features))
+        )
 
     def __len__(self) -> int:
         return len(self.features[0])
@@ -97,7 +104,9 @@ def with_inference_column_and_preprocessing(
         dataloader_timeout_secs,
         dataloader_max_retry,
     )
-    return _with_inference_column(df, artifacts, input_cols, _inference_fn, output_type, output_col, num_threads)
+    return _with_inference_column(
+        df, artifacts, input_cols, _inference_fn, output_type, output_col, num_threads
+    )
 
 
 def with_inference_column(
@@ -126,7 +135,9 @@ def with_inference_column(
     :param num_threads: Number of threads to run PyTorch inter/inta-ops
     """
     _inference_fn = _pandas_inference_udf_wrapper(inference_fn, batch_size)
-    return _with_inference_column(df, artifacts, input_cols, _inference_fn, output_type, output_col, num_threads)
+    return _with_inference_column(
+        df, artifacts, input_cols, _inference_fn, output_type, output_col, num_threads
+    )
 
 
 def _tensor_inference_udf_wrapper(
@@ -180,7 +191,9 @@ def _with_retry(func: Callable[[], Any], max_retry: int):
                 raise e
 
 
-def _pandas_inference_udf_wrapper(inference_fn: pandas_inference_udf, batch_size: int) -> pandas_inference_udf:
+def _pandas_inference_udf_wrapper(
+    inference_fn: pandas_inference_udf, batch_size: int
+) -> pandas_inference_udf:
 
     def _wrapper(
         artifacts: artifact_type,

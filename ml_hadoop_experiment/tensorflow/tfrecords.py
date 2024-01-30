@@ -1,8 +1,7 @@
 import logging
 import os
 from collections.abc import Sized
-from typing import (Callable, Dict, Generator, Iterable, Iterator, List,
-                    Optional, Tuple, Union, cast)
+from typing import Callable, Dict, Generator, Iterable, Iterator, List, Optional, Tuple, Union, cast
 
 import deprecation
 import pyspark
@@ -11,8 +10,7 @@ from cluster_pack import filesystem
 from pyspark.sql.functions import rand
 
 from ml_hadoop_experiment.common.paths import check_full_hdfs_path
-from ml_hadoop_experiment.tensorflow import (dataframe_prediction_helper,
-                                             vocabulary)
+from ml_hadoop_experiment.tensorflow import dataframe_prediction_helper, vocabulary
 
 _logger = logging.getLogger(__name__)
 
@@ -35,11 +33,15 @@ transfo_fn_type = Callable[[Dict[str, tf.Tensor]], Dict[str, tf.Tensor]]
 def serving_input_receiver_fn_factory(
     features_specs: features_specs_type,
     feature_transfo_fn: Optional[transfo_fn_type] = None,
-    input_name: str = 'inputs',
+    input_name: str = "inputs",
 ) -> Callable[[], tf.estimator.export.ServingInputReceiver]:
     def serving_input_receiver_fn() -> tf.estimator.export.ServingInputReceiver:
-        serialized_tfr_example = tf.compat.v1.placeholder(dtype=tf.string, shape=[None], name=input_name)
-        parsed_features = tf.io.parse_example(serialized=serialized_tfr_example, features=features_specs)
+        serialized_tfr_example = tf.compat.v1.placeholder(
+            dtype=tf.string, shape=[None], name=input_name
+        )
+        parsed_features = tf.io.parse_example(
+            serialized=serialized_tfr_example, features=features_specs
+        )
         if feature_transfo_fn:
             parsed_features = feature_transfo_fn(parsed_features)  # type: ignore
         return tf.estimator.export.ServingInputReceiver(
@@ -117,7 +119,9 @@ def _float_feature(value: List[float]) -> tf.train.Feature:
 
 def _string_feature(value: List[Union[str, bytes]]) -> tf.train.Feature:
     return tf.train.Feature(
-        bytes_list=tf.train.BytesList(value=[x.encode() if isinstance(x, str) else x for x in value])
+        bytes_list=tf.train.BytesList(
+            value=[x.encode() if isinstance(x, str) else x for x in value]
+        )
     )
 
 
@@ -128,9 +132,9 @@ def _get_feature_default_value(spec: tf.io.FixedLenFeature) -> List[features_pri
     elif spec.dtype.is_floating:  # type: ignore
         value = 0.0
     elif spec.dtype == tf.string:
-        value = b''
+        value = b""
     else:
-        raise ValueError(f'No default value for type {spec.dtype}')
+        raise ValueError(f"No default value for type {spec.dtype}")
     return [value] * spec.shape[0]  # type: ignore
 
 
@@ -140,7 +144,7 @@ def _preprocess_feature_value(
     try:
         # tf.io.FixedLenFeature has attribute default_value, tf.io.VarLenFeature hasn't
         # we can not check FixedLenFeature with isinstance due to pickling issues
-        if hasattr(spec, 'default_value'):
+        if hasattr(spec, "default_value"):
             # Interpret an empty list as None
             if (
                 isinstance(value, Sized)
@@ -180,11 +184,12 @@ def _value_to_feature(
                 raise ValueError(f"{str(val)} in {value} is not str or bytes as required by {spec}")
         return _string_feature(cast(List[Union[str, bytes]], value))
     else:
-        raise ValueError(f'Type {type(value)} of spec {spec} is not supported')
+        raise ValueError(f"Type {type(value)} of spec {spec} is not supported")
 
 
 def to_tf_proto(
-    x: Dict[str, features_type], features_specs: Dict[str, Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]]
+    x: Dict[str, features_type],
+    features_specs: Dict[str, Union[tf.io.FixedLenFeature, tf.io.VarLenFeature]],
 ) -> tf.train.Example:
     """Transform values into tensorflow Examples for TFRecords
     If default values are included in the feature spec then we keep null entries for the
@@ -200,7 +205,7 @@ def to_tf_proto(
         if value is None:
             continue
 
-        if hasattr(spec, 'shape') and len(value) != spec.shape[0]:  # type: ignore
+        if hasattr(spec, "shape") and len(value) != spec.shape[0]:  # type: ignore
             raise ValueError(f"value {value} does not correspond to expected shape in spec {spec}")
         feature[name] = _value_to_feature(value, spec)
 
@@ -233,7 +238,9 @@ def write_example_rdd(
     if not check_full_hdfs_path(export_path):
         raise ValueError(f"{export_path} is not a full hdfs path")
     return tfrecords.mapPartitionsWithIndex(
-        lambda idx, tfrecords: write_example_partition(tfrecords, idx, export_path, compression_type)
+        lambda idx, tfrecords: write_example_partition(
+            tfrecords, idx, export_path, compression_type
+        )
     ).collect()
 
 
@@ -261,7 +268,9 @@ def df_to_tf_record(
     )
 
     _logger.info("writing tf_record files ..")
-    _df.write.format("tfrecords").option("codec", "org.apache.hadoop.io.compress.GzipCodec").save(tf_record_dir)
+    _df.write.format("tfrecords").option("codec", "org.apache.hadoop.io.compress.GzipCodec").save(
+        tf_record_dir
+    )
 
     fs, _ = filesystem.resolve_filesystem_and_path(tf_record_dir)
     files = [f for f in fs.ls(tf_record_dir) if not os.path.basename(f).startswith("_")]

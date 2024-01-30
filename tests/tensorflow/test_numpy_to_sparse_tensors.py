@@ -5,7 +5,13 @@ from ml_hadoop_experiment.tensorflow import numpy_to_sparse_tensors
 
 
 @pytest.mark.parametrize(
-    "sizes,expected", [([2, 3], [0, 1, 0, 1, 2]), ([2, 0, 3], [0, 1, 0, 1, 2]), ([2, 1, 0], [0, 1, 0]), ([0, 0, 0], [])]
+    "sizes,expected",
+    [
+        ([2, 3], [0, 1, 0, 1, 2]),
+        ([2, 0, 3], [0, 1, 0, 1, 2]),
+        ([2, 1, 0], [0, 1, 0]),
+        ([0, 0, 0], []),
+    ],
 )
 def test_generate_increments(sizes, expected):
     result = numpy_to_sparse_tensors._generate_increments(np.array(sizes))
@@ -15,7 +21,12 @@ def test_generate_increments(sizes, expected):
 @pytest.mark.parametrize(
     "features,expected_indices,expected_values,expected_shape",
     [
-        ([[7, 8], [10, 11, 12]], [[0, 0], [0, 1], [1, 0], [1, 1], [1, 2]], [7, 8, 10, 11, 12], [2, 3]),
+        (
+            [[7, 8], [10, 11, 12]],
+            [[0, 0], [0, 1], [1, 0], [1, 1], [1, 2]],
+            [7, 8, 10, 11, 12],
+            [2, 3],
+        ),
         ([[], []], np.empty((0, 2), dtype=np.int64), [], [2, 0]),
     ],
 )
@@ -29,7 +40,12 @@ def test_create_sparse_np_stacked_int(features, expected_indices, expected_value
 @pytest.mark.parametrize(
     "features,expected_indices,expected_values,expected_shape",
     [
-        ([['a', 'b'], ['c', 'd', 'e']], [[0, 0], [0, 1], [1, 0], [1, 1], [1, 2]], ['a', 'b', 'c', 'd', 'e'], [2, 3]),
+        (
+            [["a", "b"], ["c", "d", "e"]],
+            [[0, 0], [0, 1], [1, 0], [1, 1], [1, 2]],
+            ["a", "b", "c", "d", "e"],
+            [2, 3],
+        ),
         ([[], []], np.empty((0, 2), dtype=np.int64), np.array([], dtype=str), [2, 0]),
     ],
 )

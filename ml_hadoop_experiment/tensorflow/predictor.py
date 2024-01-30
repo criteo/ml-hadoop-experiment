@@ -87,9 +87,13 @@ class Predictor:
     ) -> Union[Iterator, Dict[str, tf.Tensor]]:
         if isinstance(inputs, dict):
             if not set(self.feed_tensors) <= set(inputs):
-                raise KeyError("Missing keys in inputs: " f"{set(self.feed_tensors) - set(inputs)} (inputs = {inputs})")
+                raise KeyError(
+                    "Missing keys in inputs: "
+                    f"{set(self.feed_tensors) - set(inputs)} (inputs = {inputs})"
+                )
             return self.session.run(
-                self.fetch_tensors, feed_dict={tensor: inputs[name] for name, tensor in self.feed_tensors.items()}
+                self.fetch_tensors,
+                feed_dict={tensor: inputs[name] for name, tensor in self.feed_tensors.items()},
             )
         elif callable(inputs):
 

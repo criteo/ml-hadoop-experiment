@@ -31,7 +31,9 @@ def _generate_increments(sizes: Any) -> np.ndarray:
 
 # Generate a sparse tensor by stacking variable-length features.
 # This happens when each feature is an array
-def create_sparse_np_stacked(features: Any, dtype: Any) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def create_sparse_np_stacked(
+    features: Any, dtype: Any
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     feature_lengths = np.array([len(f) for f in features])
     max_feature_length = np.max(feature_lengths)
 
