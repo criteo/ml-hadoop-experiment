@@ -36,21 +36,22 @@ def generate_events():
     yield gen_events(48, "metric2", None)  # Should not create a new column
 
 
-EXPECTED_DATAFRAME = pandas.DataFrame.from_records(
-    [{"step": 42, "name": "metric0", "value": 32.4},
-     {"step": 44, "name": "metric0", "value": 33.8},
-     {"step": 44, "name": "metric1", "value": 23.3}])
+EXPECTED_DATAFRAME = pandas.DataFrame.from_records([
+    {"step": 42, "name": "metric0", "value": 32.4},
+    {"step": 44, "name": "metric0", "value": 33.8},
+    {"step": 44, "name": "metric1", "value": 23.3},
+])
 
 
 def test_parse_tf_events():
-    with mock.patch(f'{MODULE_TO_TEST}.gen_events_iterator') as mock_events_iterator:
+    with mock.patch(f"{MODULE_TO_TEST}.gen_events_iterator") as mock_events_iterator:
         mock_events_iterator.side_effect = lambda path: list(generate_events())
         df = events.get_all_metrics("mypath")
         assert df.equals(EXPECTED_DATAFRAME.reindex(columns=df.columns))
 
 
 def test_parse_without_summary():
-    with mock.patch(f'{MODULE_TO_TEST}.gen_events_iterator') as mock_events_iterator:
+    with mock.patch(f"{MODULE_TO_TEST}.gen_events_iterator") as mock_events_iterator:
         mock_events_iterator.side_effect = lambda path: [Event(step=0, summary=None)]
         df = events.get_all_metrics("mypath")
         assert df.empty

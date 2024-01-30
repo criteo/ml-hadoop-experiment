@@ -1,10 +1,9 @@
 from types import TracebackType
-from typing import List, Dict, Union, Callable, Optional, Iterator, Type
+from typing import Callable, Dict, Iterator, List, Optional, Type, Union
 
-import tensorflow as tf
-from tensorflow.python.platform import gfile
 import numpy as np
-
+import tensorflow as tf
+from tensorflow.compat.v1 import gfile
 
 feeds_type = Optional[List[str]]
 fetches_type = Optional[List[str]]
@@ -75,23 +74,23 @@ class Predictor:
     def __enter__(self) -> "Predictor":
         return self
 
-    def __exit__(self, exc_type: Optional[Type[BaseException]],
-                 exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> None:
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
         self.session.close()
 
     def predict(
-        self, inputs: Union[Dict[str, np.array], Callable[[], tf.data.Dataset]]
+        self, inputs: Union[Dict[str, np.ndarray], Callable[[], tf.data.Dataset]]
     ) -> Union[Iterator, Dict[str, tf.Tensor]]:
         if isinstance(inputs, dict):
             if not set(self.feed_tensors) <= set(inputs):
-                raise KeyError(
-                    "Missing keys in inputs: "
-                    f"{set(self.feed_tensors) - set(inputs)} (inputs = {inputs})"
-                )
+                raise KeyError("Missing keys in inputs: " f"{set(self.feed_tensors) - set(inputs)} (inputs = {inputs})")
             return self.session.run(
                 self.fetch_tensors,
-                feed_dict={tensor: inputs[name] for name, tensor in self.feed_tensors.items()}
+                feed_dict={tensor: inputs[name] for name, tensor in self.feed_tensors.items()},
             )
         elif callable(inputs):
 
@@ -105,7 +104,7 @@ class Predictor:
                         while True:
                             input_dict = self.session.run(next_element)
                             output_dict = self.predict(input_dict)
-                            yield {**input_dict, **output_dict}
+                            yield {**input_dict, **output_dict}  # type: ignore
                     except tf.errors.OutOfRangeError:
                         pass
 

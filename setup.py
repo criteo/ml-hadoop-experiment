@@ -14,18 +14,17 @@ except Exception:
 def _read_reqs(relpath):
     fullpath = os.path.join(os.path.dirname(__file__), relpath)
     with open(fullpath) as f:
-        return [s.strip() for s in f.readlines()
-                if (s.strip() and not s.startswith("#"))]
+        return [s.strip() for s in f.readlines() if (s.strip() and not s.startswith("#"))]
 
 
 REQUIREMENTS = _read_reqs("requirements.txt")
 
 CLASSIFIERS = [
-   "License :: OSI Approved :: Apache Software License",
-   "Operating System :: OS Independent",
-   "Programming Language :: Python :: 3",
-   "Programming Language :: Python :: 3.6",
-   "Intended Audience :: Developers"
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Intended Audience :: Developers",
 ]
 
 
@@ -44,5 +43,5 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     classifiers=CLASSIFIERS,
     keywords="tensorflow pytorch yarn",
-    url="https://github.com/criteo/ml-hadoop-experiment"
+    url="https://github.com/criteo/ml-hadoop-experiment",
 )

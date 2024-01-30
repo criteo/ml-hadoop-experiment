@@ -1,10 +1,11 @@
 torch
-tensorflow==2.4.1
-keras==2.4.3
+tensorflow
 pytest
 mock
 pylama
-pyflakes==2.4.0
-mypy==0.790
+pyflakes
+mypy
 scikit-learn
-pyspark==2.4.4
+pyspark
+types-tensorflow
+types-mock

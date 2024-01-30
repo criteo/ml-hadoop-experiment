@@ -13,17 +13,14 @@ from ml_hadoop_experiment.tensorflow import tfrecords as tffr
 user = getpass.getuser()
 
 
-@pytest.mark.parametrize("feature_mappings,specs", [
-    (data.feature_mappings, data.features_specs)
-])
+@pytest.mark.parametrize("feature_mappings,specs", [(data.feature_mappings, data.features_specs)])
 def test_to_tf_proto(feature_mappings, specs, tmpdir):
     tf_proto = tffr.to_tf_proto(data.mappings_sample(feature_mappings), specs)
     expected = data.mappings_protobuf(feature_mappings)
-    assert tf_proto == expected, \
-        "{0} should be equal to {1}".format(tf_proto, expected)
+    assert tf_proto == expected, "{0} should be equal to {1}".format(tf_proto, expected)
 
     # write tfRecords from proto
-    records_path = f'{tmpdir.realpath()}/simulated.tfrecord'
+    records_path = f"{tmpdir.realpath()}/simulated.tfrecord"
     with tf.io.TFRecordWriter(records_path) as writer:
         writer.write(tf_proto.SerializeToString())
 
@@ -47,19 +44,30 @@ def test_to_tf_proto(feature_mappings, specs, tmpdir):
                 np.testing.assert_array_almost_equal(read_value, expected_value)
 
 
-@pytest.mark.parametrize("feature_mappings,specs", [
-    (data.feature_mappings_with_inconsistent_size, data.features_specs_with_defaults)
-])
+@pytest.mark.parametrize(
+    "feature_mappings,specs",
+    [(data.feature_mappings_with_inconsistent_size, data.features_specs_with_defaults)],
+)
 def test_to_tf_proto_inconsistent_content(feature_mappings, specs):
     with pytest.raises(ValueError):
         tffr.to_tf_proto(data.mappings_sample(feature_mappings), specs)
 
 
-@pytest.mark.parametrize("tfrecords,export_path,index", [
-    ([data.mappings_protobuf(data.feature_mappings)], f"viewfs://root/{user}/tf_record_test", 1),
-    ([data.mappings_protobuf(m) for m in data.all_mappings],
-     f"viewfs://root/{user}/tf_record_test", 2)
-])
+@pytest.mark.parametrize(
+    "tfrecords,export_path,index",
+    [
+        (
+            [data.mappings_protobuf(data.feature_mappings)],
+            f"viewfs://root/{user}/tf_record_test",
+            1,
+        ),
+        (
+            [data.mappings_protobuf(m) for m in data.all_mappings],
+            f"viewfs://root/{user}/tf_record_test",
+            2,
+        ),
+    ],
+)
 def test_write_example_partition(tfrecords, export_path, index):
     tfwriter_mock = mock.Mock()
 
@@ -67,11 +75,9 @@ def test_write_example_partition(tfrecords, export_path, index):
     def get_tfrecordwriter(*args, **kwargs):
         yield tfwriter_mock
 
-    with mock.patch('ml_hadoop_experiment.tensorflow.tfrecords.tf.io') as tfpython_io_mock:
+    with mock.patch("ml_hadoop_experiment.tensorflow.tfrecords.tf.io") as tfpython_io_mock:
         tfpython_io_mock.TFRecordWriter = get_tfrecordwriter
         results = tffr.write_example_partition(tfrecords, index, export_path)
-        expected_call_args_list =\
-            [((tfrecord.SerializeToString(),),) for tfrecord in tfrecords]
+        expected_call_args_list = [((tfrecord.SerializeToString(),),) for tfrecord in tfrecords]
         assert tfwriter_mock.write.call_args_list == expected_call_args_list
-        assert results[0][0] ==\
-            "{0}/part-{1:05d}".format(export_path, index)
+        assert results[0][0] == "{0}/part-{1:05d}".format(export_path, index)

@@ -1,10 +1,10 @@
-from typing import Any, Optional, Callable
+from typing import Any, Callable, Optional
 
 import numpy as np
 import pandas as pd
 import pyspark.sql as sp
-from pyspark.sql.types import FloatType
 from pyspark.sql import functions as sf
+from pyspark.sql.types import FloatType
 
 
 def with_inference_column(
@@ -12,7 +12,7 @@ def with_inference_column(
     model: Any,
     output_column_name: str = "prediction",
     output_column_type: sp.types.DataType = FloatType(),
-    postprocessing_fn: Optional[Callable[[Any], pd.Series]] = None
+    postprocessing_fn: Optional[Callable[[Any], pd.Series]] = None,
 ) -> sp.DataFrame:
     """
     Runs inference on the input dataframe and adds a column 'output_column_name' with
@@ -50,6 +50,6 @@ def with_inference_column(
             result = pd.Series(data=np.ascontiguousarray(result))
         return result
 
-    udf = sf.pandas_udf(inference, output_column_type)(*columns)
+    udf = sf.pandas_udf(inference, output_column_type)(*columns)  # type: ignore
 
     return df.withColumn(output_column_name, udf)
